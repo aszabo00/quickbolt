@@ -1,0 +1,15 @@
+*__pycache__
+*pytest_cache
+*run_info*
+
+*.egg-info
+*build
+*dist
+
+*DS_Store
+*poetry.lock
+*idea
+*mb*.css
+*.pyc
+
+*docstrings

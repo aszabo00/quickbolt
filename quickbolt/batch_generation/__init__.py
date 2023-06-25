@@ -1,0 +1,1 @@
+from quickbolt.batch_generation.batch_generation import generate_batch

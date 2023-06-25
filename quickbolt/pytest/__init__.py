@@ -1,0 +1,1 @@
+from quickbolt.pytest.core_pytest_base import CorePytestBase
