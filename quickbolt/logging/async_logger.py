@@ -111,7 +111,7 @@ class AsyncLogger(object):
         if not options:
             options = "%(asctime)s | %(levelname)s | %(name)s | %(message)s"
 
-        handler = AsyncFileHandler(filename, mode="w")
+        handler = AsyncFileHandler(filename)
         handler.formatter = Formatter(options)
         self.logger.add_handler(handler)
 
