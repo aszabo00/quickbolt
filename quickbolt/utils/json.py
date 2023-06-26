@@ -38,7 +38,9 @@ def serialize(data: Any, other_exceptions: Any = None, safe=False) -> str:
     exceptions = [orjson.JSONEncodeError] + other_exceptions
 
     try:
-        return orjson.dumps(data, option=orjson.OPT_INDENT_2).decode()
+        return orjson.dumps(
+            data, option=orjson.OPT_INDENT_2 | orjson.OPT_NON_STR_KEYS
+        ).decode()
     except tuple(exceptions):
         if not safe:
             raise

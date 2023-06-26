@@ -138,6 +138,12 @@ async def csv_to_dict(csv_data: str | list, scrub: bool = False) -> list[dict]:
 
     if scrub:
         data = [scrub_id(d) for d in data]
+
+    for row in data:
+        for k, v in row.items():
+            if v:
+                row[k] = jh.deserialize(v, safe=True)
+
     return data
 
 
@@ -205,6 +211,11 @@ async def add_rows_to_csv_report(csv_path: None | str, csv_data: list[list], mod
     """
     if not isinstance(csv_data, list):
         csv_data = [[csv_data]]
+
+    for data in csv_data[1:]:
+        for i, cell in enumerate(data):
+            if isinstance(cell, (dict, list)):
+                data[i] = jh.serialize(cell)
 
     async with aopen(csv_path, mode=mode, encoding="ascii", newline="") as csv_file:
         writer = AsyncWriter(csv_file)

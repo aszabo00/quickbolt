@@ -46,7 +46,7 @@ async def test_validate_references_mismatch(safe=True):
     ]
     assert all(field in mismatches[0] for field in fields)
 
-    expected_mismatches = [{"key": "ACTUAL_CODE", "d1": "404", "d2": "999"}]
+    expected_mismatches = [{"key": "ACTUAL_CODE", "d1": 404, "d2": 999}]
     assert mismatches[0]["values"] == expected_mismatches
 
     await validations.logging.delete_run_info()
