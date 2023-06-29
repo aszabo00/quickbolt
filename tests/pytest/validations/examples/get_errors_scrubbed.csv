@@ -14,7 +14,7 @@ DESCRIPTION,CODE_MISMATCH,BATCH_NUMBER,INDEX,METHOD,EXPECTED_CODE,ACTUAL_CODE,ME
       ""lng"": ""00.0000""
     }
   },
-  ""phone"": ""0-000-000-0000 000000"",
+  ""phone"": ""0-000-000-0000 000000notthephonenumber"",
   ""website"": ""hildegard.org"",
   ""company"": {
     ""name"": ""Romaguera-Crona"",

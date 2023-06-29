@@ -1,6 +1,7 @@
 import ast
 import csv
 import re
+from copy import deepcopy
 
 import aiofiles.os as aos
 import numpy as np
@@ -37,87 +38,49 @@ async def read_csv(csv_path: None | str) -> list[list]:
     ]
 
 
-def scrub_field(data_message: str, field: str) -> str:
+def scrub(text: str) -> str:
     """
-    This scrubs a specific field for alphanumerical data.
+    This scrubs text of alphanumerical information.
 
     Args:
-        data_message: The message to scrub.
-        field: The field in the json to scrub.
+        text: The text to scrub.
 
     Returns:
-        data_message: The scrubbed message.
+        scrubbed_text: The scrubbed text.
     """
-    data_dict = jh.deserialize(data_message)
-    scrubbed_field = jh.serialize(data_dict[field])[:]
+    scrubbed_text = text
 
     targets = re.findall(
-        r"([A-Za-z]+[\d@]+[\w@]*|[\d@]+[A-Za-z]+[\w@]*|\d+)", scrubbed_field
+        r"([A-Za-z]+[\d@]+[\w@]*|[\d@]+[A-Za-z]+[\w@]*|\d+)", scrubbed_text
     )
     targets.sort(key=len, reverse=True)
 
     for t in targets:
-        scrubbed_field = scrubbed_field.replace(t, "0" * len(t))
-    scrubbed_field = re.sub(
-        r"\\+", "", re.sub(r'(?!\B"[^"]*)0+(?![^"]*"\B)', "0", scrubbed_field)
-    )
+        scrubbed_text = scrubbed_text.replace(t, "0" * len(t))
 
-    data_dict[field] = jh.deserialize(scrubbed_field)
-    return jh.serialize(data_dict)
+    return scrubbed_text
 
 
-def scrub_id(data: dict, regex: None | str = None) -> dict:
+def scrub_data(data: dict) -> dict:
     """
-    This removes id's from a response report object.
+    This scrubs a dict against pre-defined fields.
 
     Args:
         data: A response report object.
-        regex: The regex to locate anything (id's) for scrubbing (defaults to uuid's).
 
     Returns:
-        data: A scrubbed response report object.
+        scrubbed_data: A scrubbed response report object.
     """
-    regex = (
-        regex
-        or r"[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}"
-    )
+    scrub_fields = ["message", "url", "server_headers", "headers", "kwargs", "body"]
 
-    data_message = {k: jh.ensure_serializable(v) for k, v in data.items()}
-    data_message = jh.serialize(data_message)
+    data_copy = deepcopy(data)
+    for key, value in data_copy.items():
+        if key.lower() in scrub_fields:
+            data_ser = jh.serialize(value)
+            data_scr = scrub(data_ser)
+            data_copy[key] = jh.deserialize(data_scr)
 
-    ids = list(set(re.findall(regex, str(data))))
-    if ids:
-        uuid_rep = re.sub(r"[^-]", "0", ids[0])
-        data_message = re.sub("|".join(ids), uuid_rep, data_message)
-
-    headers = data.get("HEADERS") or data.get("headers")
-    if headers:
-        header_reps = [
-            [v, "0" * len(v)]
-            for k, v in headers.items()
-            if len(re.findall(r"\d", str(v))) > 1
-        ]
-        for h in header_reps:
-            data_message = data_message.replace(h[0], h[1])
-
-    if data.get("message") and "2" == data["actual_code"][0]:
-        data_message = scrub_field(data_message, "message")
-
-    if data.get("message") and "4" == data["actual_code"][0]:
-        targets = re.findall(r'"(.+?)"', str(data["message"]))
-        targets = [
-            [t, re.findall(r"([A-Za-z]+[\d@]+[\w@]*|[\d@]+[A-Za-z]+[\w@]*|\d+)", t)]
-            for t in targets
-        ]
-
-        reps = [[t[0], re.sub("|".join(t[1]), "0", t[0])] for t in targets if t[1]]
-        for r in reps:
-            data_message = data_message.replace(r[0], r[1])
-
-    if data.get("body"):
-        data_message = scrub_field(data_message, "body")
-
-    return jh.deserialize(data_message)
+    return data_copy
 
 
 async def csv_to_dict(csv_data: str | list, scrub: bool = False) -> list[dict]:
@@ -137,7 +100,7 @@ async def csv_to_dict(csv_data: str | list, scrub: bool = False) -> list[dict]:
         data = [dict(zip(csv_data[0], r)) for r in csv_data[1:] if r]
 
     if scrub:
-        data = [scrub_id(d) for d in data]
+        data = [scrub_data(d) for d in data]
 
     for row in data:
         for k, v in row.items():
@@ -190,7 +153,7 @@ async def create_csv_report(csv_path: str, _return: dict, scrub: bool = False):
             {k: v if k != "curl" else "" for k, v in r.copy().items()}
             for r in responses
         ]
-        scrubbed_responses = [scrub_id(r) for r in scrubbed_responses]
+        scrubbed_responses = [scrub_data(r) for r in scrubbed_responses]
 
         col_titles = [""]
         if not await aos.path.exists(scrubbed_csv_path):

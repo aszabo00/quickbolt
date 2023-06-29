@@ -182,7 +182,7 @@ class AioRequests(object):
                 "response_seconds": response_seconds,
                 "delay_seconds": delay,
                 "utc_time": t1.isoformat(),
-                "headers": kwargs.pop("headers"),
+                "headers": kwargs.pop("headers", {}),
                 "kwargs": kwargs,
             }
 

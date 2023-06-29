@@ -11,7 +11,7 @@ class TestGetExample(SomePytestBase):
     purge_run_info = True
 
     headers = {}
-    url = "https://httpbin.org/get"
+    url = "https://jsonplaceholder.typicode.com/users/1"
 
     @pytest.fixture(scope="class")
     def event_loop(request):

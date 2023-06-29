@@ -73,22 +73,22 @@ async def test_read_csv():
     assert len(response_csv) == 2
 
 
-def test_scrub_field():
+def test_scrub():
     data = {"new_field": "Test12345"}
     data_message = jh.serialize(data)
-    scrubbed_data_message = rc.scrub_field(data_message, "new_field")
+    scrubbed_data_message = rc.scrub(data_message)
     scrubbed_data = jh.deserialize(scrubbed_data_message)
     assert scrubbed_data["new_field"] == "000000000"
 
 
-def test_scrub_id():
+def test_scrub_data():
     data = {
         "actual_code": "200",
         "headers": pytest.test_field,
         "body": pytest.test_field,
         "message": pytest.test_field,
     }
-    scrubbed_data = rc.scrub_id(data)
+    scrubbed_data = rc.scrub_data(data)
     expected_scrubbed_data = {
         "actual_code": "200",
         "headers": {"field": "000000000"},
@@ -114,7 +114,7 @@ async def test_csv_to_dict_data():
 
 
 @pytest.mark.asyncio
-async def test_csv_to_dict_path_scrub_id():
+async def test_csv_to_dict_path_scrub_data():
     response_csv = await rc.read_csv(pytest.csv_path)
     response_csv[1][11] = pytest.test_field
     response_dict = await rc.csv_to_dict(response_csv, scrub=True)

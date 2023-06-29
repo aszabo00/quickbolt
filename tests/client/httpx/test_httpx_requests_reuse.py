@@ -14,7 +14,7 @@ pytestmark = pytest.mark.client
 def event_loop():
     pytest.root_dir = f"{sos.path.dirname(__file__)}/{__name__.split('.')[-1]}"
     pytest.headers = {}
-    pytest.url = "https://httpbin.org/get"
+    pytest.url = "https://jsonplaceholder.typicode.com/users/1"
 
     pytest.httpx_requests = HttpxRequests(root_dir=pytest.root_dir, reuse=True)
     pytest.run_info_path = pytest.httpx_requests.logging.run_info_path

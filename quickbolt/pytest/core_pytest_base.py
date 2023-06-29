@@ -19,6 +19,7 @@ class CorePytestBase(object):
     csv_path: None | str = None
     tests_data: None | dict = None
     credentials_data: None | dict = None
+    error_file_path: None | str = None
 
     # Custom on-end options to be run as part of the teardown
     purge_run_info: bool = False
@@ -94,16 +95,16 @@ class CorePytestBase(object):
                             rows.append([f"error_{k}"] + [jh.serialize((m[k]))])
                 rows.append([""])
 
-            error_file = re.sub(
+            error_file_path = re.sub(
                 r"/run_logs/",
                 "/run_errors/",
                 self.csv_path.replace(".csv", "_errors.csv"),
             )
-            error_file = re.sub(r"/pass/|/fail/", "/", error_file)
-            error_dir = "/".join(error_file.split("/")[:-1])
+            self.error_file_path = re.sub(r"/pass/|/fail/", "/", error_file_path)
+            error_dir = Path(self.error_file_path).parent
 
             await dh.safe_mkdirs(error_dir)
-            await rc.add_rows_to_csv_report(error_file, rows)
+            await rc.add_rows_to_csv_report(self.error_file_path, rows)
 
     async def purge_run_info_dirs(self):
         run_info_path = self.validations.logging.run_info_path
