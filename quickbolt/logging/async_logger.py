@@ -138,7 +138,7 @@ class AsyncLogger(object):
         Returns:
             file: A generator to the log file
         """
-        path = path or self.run_info_path
+        path = path or self.log_file_path
         async with aopen(path) as f:
             async for line in f:
                 yield line

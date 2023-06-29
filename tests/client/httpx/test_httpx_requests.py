@@ -10,7 +10,7 @@ pytestmark = pytest.mark.client
 
 root_dir = f"{os.path.dirname(__file__)}/{__name__.split('.')[-1]}"
 headers = {}
-url = "https://httpbin.org/get"
+url = "https://jsonplaceholder.typicode.com/users/1"
 
 
 def test_request(batch=None, delay=0, report=True, **kwargs):

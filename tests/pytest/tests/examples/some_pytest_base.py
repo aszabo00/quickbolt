@@ -38,3 +38,7 @@ class SomePytestBase(CorePytestBase):
             "pass/get_scrubbed.csv",
         ]
         assert files == expected_files
+
+        logs = [r async for r in self.aio_requests.logging.read_log_file()]
+        checks = ["making", "made", "returning", "batch duration"]
+        assert all(c in logs[i].lower() for i, c in enumerate(checks))
