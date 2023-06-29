@@ -8,6 +8,7 @@ import numpy as np
 from aiocsv import AsyncDictReader, AsyncReader, AsyncWriter
 from aiofiles import open as aopen
 
+import quickbolt.utils.dictionary as dh
 import quickbolt.utils.json as jh
 
 
@@ -48,7 +49,15 @@ def scrub(text: str) -> str:
     Returns:
         scrubbed_text: The scrubbed text.
     """
-    scrubbed_text = text
+    # need to do better here
+    text_dict = jh.deserialize(text)
+    flat_scrubbed_text = dh.flatten(text_dict)
+    for key, value in flat_scrubbed_text.items():
+        if not isinstance(value, str):
+            val_type = type(value).__name__
+            flat_scrubbed_text[key] = f"{value} ({val_type})"
+    unflat_scrubbed_text = dh.unflatten(flat_scrubbed_text)
+    scrubbed_text = jh.serialize(unflat_scrubbed_text)
 
     targets = re.findall(
         r"([A-Za-z]+[\d@]+[\w@]*|[\d@]+[A-Za-z]+[\w@]*|\d+)", scrubbed_text
@@ -127,7 +136,7 @@ async def create_csv_report(csv_path: str, _return: dict, scrub: bool = False):
         kwargs = r.get("kwargs", {})
         r["body"] = kwargs.pop("message", {}) or kwargs.pop("data", {})
         if "FormData" in str(type(r["body"])):
-            r["body"] = r["body"]._fields
+            r["body"] = {f[0]["name"]: f[2] for f in r["body"]._fields}
         elif isinstance(r["body"], dict):
             update = {
                 k: v.name
