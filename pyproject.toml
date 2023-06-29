@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "quickbolt"
-version = "0.1.0"
+version = "0.1.1"
 description = "Asynchronously make and validate requests!"
 authors = ["Ashton Szabo <aszabo00@gmail.com>"]
 repository = "https://github.com/aszabo00/quickbolt"
