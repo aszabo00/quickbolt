@@ -81,6 +81,15 @@ def test_scrub():
     assert scrubbed_data["new_field"] == "000000000"
 
 
+def test_scrub_leading_zeros():
+    data = {"leading_zeros": 10000}
+    data_message = jh.serialize(data)
+    scrubbed_data_message = rc.scrub(data_message)
+
+    assert scrubbed_data_message == '{\n  "leading_zeros": "00000 (int)"\n}'
+    assert jh.deserialize(scrubbed_data_message) == {"leading_zeros": "00000 (int)"}
+
+
 def test_scrub_data():
     data = {
         "actual_code": "200",
