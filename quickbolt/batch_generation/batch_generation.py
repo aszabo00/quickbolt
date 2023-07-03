@@ -1,42 +1,42 @@
 import itertools as it
 import re
-from copy import deepcopy
-from urllib.parse import urlparse
+from itertools import combinations
+from math import ceil
+from urllib.parse import parse_qs, urlencode, urlparse
 
+import quickbolt.utils.dictionary as dh
 import quickbolt.utils.json as jh
 
 
 def generate_batch(
     method: str,
-    headers: dict,
     url: str,
     description: str = "",
-    fr_pairs: None | list | list[list] = None,
-    bad_header_count: int = 1,
-    include_query_params: bool = True,
-    full: bool = False,
+    headers: None | dict = None,
     json: None | dict = None,
     data: None | dict = None,
+    bad_header_count: int = 1,
     unsafe_bodies: bool = False,
+    corrupt_query_params: bool = True,
+    min: bool = True,
 ) -> list[dict]:
     """
     This generates url batches to feed into the aio_requests.request loader.
 
     Args:
         method: The method of the request.
-        headers: The headers of the request.
         url: A 200 type url(a passing request).
         description: A description of the request.
-        fr_pairs: Forbidden swap out pairs e.g. [id, forbidden_id].
-        bad_header_count: The amount of bad header possibilities used.
-        include_query_params: Whether to include query params in the bad url generation.
-        full: Whether to generate bad values on all strings instead of strings with numbers.
+        headers: The headers of the request.
         json: A json (dict) body of the request.
         data: A data (dict) body of the request.
+        bad_header_count: The amount of bad header possibilities used.
         unsafe_bodies: Whether to include unsafe bodies in the batch.
+        corrupt_query_params: Whether to corrupt the query params.
+        min: Whether to give the minimum amount of corruptions.
 
     Returns:
-        batch: The list of 200-500 url combinations.
+        batch: The list of 200-500 request corruptions.
     """
     method = method.lower()
     good_code = {
@@ -47,18 +47,11 @@ def generate_batch(
         "delete": "204",
     }[method]
 
-    bad_headers = generate_bad_bodies(headers, "0", original_keys=True)[
-        :bad_header_count
-    ]
-
-    invalid_urls = generate_bad_urls(
-        url, "999", include_query_params=include_query_params, full=full
-    )
-    forbidden_urls = generate_bad_urls(
-        url, replacements=fr_pairs, include_query_params=include_query_params, full=full
-    )
+    invalid_sub_values = {"str": "aaa", "digit": "999"}
+    bad_headers = generate_bad_bodies(headers, min=min)[:bad_header_count]
+    invalid_urls = generate_bad_urls(url, invalid_sub_values, corrupt_query_params, min)
     not_found_urls = generate_bad_urls(
-        url, "0", include_query_params=include_query_params, full=full
+        url, corrupt_query_params=corrupt_query_params, min=min
     )
 
     clean_url = url.replace(";", "")
@@ -66,7 +59,7 @@ def generate_batch(
         description += " "
 
     batch = [
-        [
+        *[
             {
                 "code": good_code,
                 "description": f"{description}good",
@@ -75,7 +68,7 @@ def generate_batch(
                 "url": clean_url,
             }
         ],
-        [
+        *[
             {
                 "code": "400",
                 "description": f"{description}invalid",
@@ -85,7 +78,7 @@ def generate_batch(
             }
             for u in invalid_urls
         ],
-        [
+        *[
             {
                 "code": "401",
                 "description": f"{description}not auth",
@@ -95,17 +88,7 @@ def generate_batch(
             }
             for h in bad_headers
         ],
-        [
-            {
-                "code": "403",
-                "description": f"{description}forbidden",
-                "method": method,
-                "headers": headers,
-                "url": u,
-            }
-            for u in forbidden_urls
-        ],
-        [
+        *[
             {
                 "code": "404",
                 "description": f"{description}not found",
@@ -116,7 +99,6 @@ def generate_batch(
             for u in not_found_urls
         ],
     ]
-    batch = [i for b in batch for i in b]
 
     if json or data:
         body = json
@@ -136,25 +118,24 @@ def generate_batch(
             "url": clean_url,
         }
 
-        extra_batch = [
-            {
-                **good_batch,
-                **{key: b, "description": f"{description}invalid"},
-                "code": "400",
-            }
-            for b in generate_bad_bodies(body, "999")
+        bad_bodies_batch = [
+            *[
+                {
+                    **good_batch,
+                    **{key: b, "description": f"{description}invalid"},
+                    "code": "400",
+                }
+                for b in generate_bad_bodies(body, invalid_sub_values, min=min)
+            ],
+            *[
+                {
+                    **good_batch,
+                    **{key: b, "description": f"{description}not found"},
+                    "code": "404",
+                }
+                for b in generate_bad_bodies(body, min=min)
+            ],
         ]
-        batch.extend(extra_batch)
-
-        extra_batch = [
-            {
-                **good_batch,
-                **{key: b, "description": f"{description}not found"},
-                "code": "404",
-            }
-            for b in generate_bad_bodies(body, "0")
-        ]
-        batch.extend(extra_batch)
 
         if unsafe_bodies:
             extra_batch = [
@@ -165,151 +146,174 @@ def generate_batch(
                 }
                 for b in generate_unsafe_bodies(body)
             ]
-            batch.extend(extra_batch)
+            bad_bodies_batch.extend(extra_batch)
 
-    return [batch[0]] + sorted(batch[1:], key=lambda k: k["code"].split("|")[0])
+        batch.extend(bad_bodies_batch)
+        batch.sort(key=lambda k: k["code"].split("|")[0])
+
+    return batch
 
 
 def generate_bad_urls(
-    data: str,
-    sub_value: None | str = None,
-    replacements: None | list | list[list] = None,
-    include_query_params: bool = True,
-    full: bool = False,
+    url: str,
+    sub_values: None | dict = None,
+    corrupt_query_params: bool = True,
+    min: bool = True,
 ) -> list:
     """
     This generates a list of bad urls e.g. path params and query params.
 
     Args:
         data: A 200 type url.
-        sub_value: A numerical substitute value for invalidating(i.e. '999')
-                   or converting to not found(i.e. '0').
-        replacements: Forbidden swap out pairs e.g. [id, forbidden_id].
-        include_query_params: Whether to include bad generations of query params.
-        full: Whether to generate bad values on all strings instead of strings with numbers.
+        sub_values: Regex type substitutes for char type replacements.
+        corrupt_query_params: Whether to corrupt the query params.
+        min: Whether to give the minimum amount of corruptions.
 
     Returns:
-        bad_datas: The list of bad datas for the request.
+        bad_urls: The list of bad urls for the request.
     """
-    if not sub_value and not replacements:
-        return []
-
-    _data = data[:]
-    parsed = urlparse(_data)
-    _data = _data.replace(";", "")
+    parsed = urlparse(url)
 
     query = parsed.query
-    if not include_query_params:
-        query = ""
+    query_dict = {"query": parse_qs(query) or ""}
 
+    marked_url = url
     path = parsed.path
     if ";" not in parsed.path:
-        path = f";{path}"
+        marked_path = f";{path}"
+        marked_url = marked_url.replace(path, marked_path)
+        path = marked_path
 
-    path, params = path.split(";")
-    params += "/" + re.sub(r"[?=&]", "/", query)
+    _, params = path.split(";")
+    params_split = params.lstrip("/").split("/")
 
-    return generate_bad_data(sub_value, replacements, full, _data, params)
+    corruptables = {"params": dict(zip(params_split, params_split))}
+    if corrupt_query_params:
+        corruptables.update(query_dict)
+    corruptables = dh.flatten(corruptables)
+    corruptables_ser = jh.serialize(corruptables)
+
+    bad_combos_des = generate_bad_data(corruptables_ser, corruptables, sub_values, min)
+    bad_combos_unfl = [dh.unflatten(b) for b in bad_combos_des]
+
+    bad_urls = []
+    clean_url = url.replace(";", "")
+    base_url = marked_url.split(";")[0].lstrip("/").rstrip("/")
+    for bad_combo in bad_combos_unfl:
+        query = bad_combo.get("query", "") or query_dict.get("query", "")
+        if query:
+            query = urlencode(query, doseq=True)
+            query = f"?{query}"
+
+        params = bad_combo.get("params", "")
+        if params:
+            params = "/".join(params.values()).rstrip("/")
+
+        bad_url = f"{base_url}/{params + query}"
+        if bad_url != clean_url:
+            bad_urls.append(bad_url)
+
+    return list(dict.fromkeys(bad_urls))
 
 
 def generate_bad_bodies(
-    data: dict,
-    sub_value: None | str = None,
-    replacements: None | list | list[list] = None,
-    full: bool = False,
-    original_keys: bool = False,
-) -> list:
+    data: dict, sub_values: None | dict = None, min: bool = True
+) -> list[dict]:
     """
     This generates a list of bad bodies.
 
     Args:
         data: A 200 type body.
-        sub_value: A numerical substitute value for invalidating(i.e. '999')
-                   or converting to not found(i.e. '0').
-        replacements: Forbidden swap out pairs e.g. [id, forbidden_id].
-        full: Whether to generate bad values on all strings instead of strings with numbers.
-        original_keys: Whether to keep the bad bodies with their original keys.
+        sub_values: Regex type substitutes for char type replacements.
+        min: Whether to give the minimum amount of corruptions.
 
     Returns:
-        bad_data: The list of bad datas for the request.
+        bad_data: The unflattened list of bad data for the request.
     """
-    if not sub_value and not replacements:
-        return []
+    data_copy_flat = dh.flatten(data)
 
-    _data = deepcopy(data)
-    incorruptible_data = {}
-    for key, value in data.items():
-        if "file" in key or not isinstance(value, (int, float, str, dict)):
-            incorruptible_data[key] = _data.pop(key)
+    corruptables = {}
+    incorruptibles = {}
+    for key, value in data_copy_flat.items():
+        if "file" in key or not isinstance(value, (int, float, str)):
+            incorruptibles[key] = value
+        else:
+            corruptables[key] = value
+    data_copy_flat_ser = jh.serialize(corruptables)
 
-    _data = jh.serialize(_data)
-    params = "/".join(f"{k}/{v}" for k, v in data.items())
+    bad_combos_des = generate_bad_data(
+        data_copy_flat_ser, corruptables, sub_values, min
+    )
 
-    bad_data = generate_bad_data(sub_value, replacements, full, _data, params)
-    bad_data = [jh.deserialize(b) for b in bad_data]
+    if incorruptibles:
+        for bad_combo in bad_combos_des:
+            bad_combo.update(incorruptibles)
 
-    if original_keys:
-        original_keys_set = set(data.keys())
-        bad_data = [b for b in bad_data if original_keys_set.issuperset(b)]
+    bad_combos_unfl = [dh.unflatten(b) for b in bad_combos_des]
 
-    for b in bad_data:
-        b.update(incorruptible_data)
+    seen = []
+    unique_dicts = []
+    for bad_combo in bad_combos_unfl:
+        t = tuple(bad_combo.items())
+        if t not in seen:
+            unique_dicts.append(bad_combo)
+            seen.append(t)
 
-    return bad_data
+    return unique_dicts
 
 
 def generate_bad_data(
-    sub_value: str, replacements: list | list[list], full: bool, data: str, params: str
-):
+    data_flat_ser: str, corruptables: dict, sub_values: dict, min: bool = True
+) -> list[dict]:
     """
-    This generates a list of bad data.
+    This creates the corrupted combinations.
 
     Args:
-        sub_value: A numerical substitute value for invalidating(i.e. '999')
-                   or converting to not found(i.e. '0').
-        replacements: Forbidden swap out pairs e.g. [id, forbidden_id].
-        full: Whether to generate bad values on all strings instead of strings with numbers.
-        data: The original 200 type data object (str url or json).
-        params: The parameters to corrupt.
+        data_flat_ser: A flat, serialized version of the data being corrupted.
+        corruptables: The values to target for corruption.
+        sub_values: Regex type substitutes for char type replacements.
+        min: Whether to give the minimum amount of corruptions.
 
     Returns:
-        bad_datas: The list of bad datas for the request.
+        bad_combos_des: The list of deserialized bad data for the request.
     """
+    active_sub_values = {"str": "a", "digit": "0"}
+    if isinstance(sub_values, dict):
+        active_sub_values.update(sub_values)
 
-    if sub_value:
-        replacements = [
-            [p, re.sub(r"[a-zA-Z]", "a", re.sub(r"\d", sub_value, p))]
-            for p in params.split("/")
-            if full or re.findall(r"\d+", p)
-        ]
-        if not replacements:
-            return []
-    elif replacements and not isinstance(replacements[0], list):
-        replacements = [replacements]
+    num_of_combos = 1
+    if not min:
+        num_of_combos = ceil(len(corruptables) / 3)
 
-    # restricts the generated combinations
-    num_combinations = len(set([r[0] for r in replacements]))
-    combinations = [
-        c
-        for c in it.combinations(replacements, num_combinations)
-        if len(set([i[0] for i in c])) > num_combinations - 1
-    ]
+    combos = list(combinations(corruptables.items(), num_of_combos))
+    combos.append(tuple(corruptables.items()))
 
-    bad_datas = []
-    for comb in combinations:
-        bad_data = data.rstrip("/")
-        for c in comb:
-            bad_data = bad_data.replace(c[0], c[1])
-            if sub_value:
-                _bad_data = data.rstrip("/")
-                _bad_data = re.sub(rf"\b{c[0]}\b", c[1], _bad_data)
-                if _bad_data != data and _bad_data not in bad_datas:
-                    bad_datas.append(_bad_data)
+    bad_combos = []
+    for combo in combos:
+        bad_combo = data_flat_ser
+        for key, value in combo:
+            key_str = f'"{key}"'
 
-        if bad_data not in bad_datas:
-            bad_datas.append(bad_data)
+            if isinstance(value, str):
+                value_str = f'"{value}"'
+            else:
+                value_str = str(value)
+            corrupt_value = value_str
 
-    return bad_datas
+            str_sub = active_sub_values.get("str")
+            if str_sub:
+                corrupt_value = re.sub(r"[a-zA-Z]", str_sub, corrupt_value)
+
+            digit_sub = active_sub_values.get("digit")
+            if digit_sub:
+                corrupt_value = re.sub(r"\d", digit_sub, corrupt_value)
+
+            bad_combo = bad_combo.replace(
+                f"{key_str}: {value_str}", f"{key_str}: {corrupt_value}"
+            )
+        bad_combos.append(bad_combo)
+
+    return [jh.deserialize(b) for b in bad_combos]
 
 
 def generate_unsafe_bodies(body: dict) -> list[dict]:
