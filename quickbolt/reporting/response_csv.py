@@ -134,7 +134,7 @@ async def create_csv_report(csv_path: str, _return: dict, scrub: bool = False):
         r["server_headers"] = {k: v for k, v in r["server_headers"].items()}
 
         kwargs = r.get("kwargs", {})
-        r["body"] = kwargs.pop("message", {}) or kwargs.pop("data", {})
+        r["body"] = kwargs.pop("json", {}) or kwargs.pop("data", {})
         if "FormData" in str(type(r["body"])):
             r["body"] = {f[0]["name"]: f[2] for f in r["body"]._fields}
         elif isinstance(r["body"], dict):
@@ -147,6 +147,10 @@ async def create_csv_report(csv_path: str, _return: dict, scrub: bool = False):
 
         r["response_seconds"] = r.pop("response_seconds")
         r["delay_seconds"] = r.pop("delay_seconds")
+
+        for key, value in kwargs.items():
+            if not isinstance(value, (str, int, float, list, dict)):
+                kwargs[key] = str(value)
 
     col_titles = [""]
     if not await aos.path.exists(csv_path):

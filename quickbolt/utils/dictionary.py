@@ -27,40 +27,48 @@ def flatten(d: dict | list) -> dict:
     return obj
 
 
-def unflatten(d: dict | list) -> dict:
+def unflatten(flat_dict: dict) -> dict | list:
     """
     This unflattens a flattened dictionary.
 
     Args:
-        d: The object to flatten.
+        flat_dict: The flat dictionary to unflatten.
 
     Returns:
-        items: The unflattened object.
+        unflattened_dict: The unflattened dict.
     """
-    items = {}
-    for k, v in d.items():
-        keys = k.split(".")
-        sub_items = items
+    unflattened_dict = {}
 
-        index = None
-        if keys[-1].isdigit():
-            index = int(keys[-1])
-        list_action = isinstance(index, int)
-
-        for ki in keys[:-1]:
-            try:
-                sub_items = sub_items[ki]
-            except KeyError:
-                if list_action:
-                    sub_items[ki] = []
-                else:
-                    sub_items[ki] = {}
-                sub_items = sub_items[ki]
-        if list_action:
-            sub_items.insert(index, v)
+    def assign(keys, value, d):
+        key = keys.pop(0)
+        if len(keys) == 0:
+            if key.isdigit():
+                while len(d) <= int(key):
+                    d.append(None)
+                d[int(key)] = value
+            else:
+                d[key] = value
         else:
-            sub_items[keys[-1]] = v
-    return items
+            if key.isdigit():
+                if int(key) < len(d):
+                    assign(keys, value, d[int(key)])
+                else:
+                    while len(d) < int(key):
+                        d.append({})
+                    d.append({})
+                    assign(keys, value, d[int(key)])
+            else:
+                if key in d.keys():
+                    assign(keys, value, d[key])
+                else:
+                    d[key] = [{}] if keys[0].isdigit() else {}
+                    assign(keys, value, d[key])
+
+    for flat_key, value in flat_dict.items():
+        keys = flat_key.split(".")
+        assign(keys, value, unflattened_dict)
+
+    return unflattened_dict
 
 
 def compare_dictionaries(

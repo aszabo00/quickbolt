@@ -49,7 +49,7 @@ responses = httpx_requests.request(batch)
 
 Note: Both clients have an awaitable request method called async_request e.g. **await aiohttp_requests.async_request(...)** or **await httpx_requests.async_request(...)**.
 
-Note: You can indicate where the batch generator will start looking for path parameters by placing a **semicolon (;)** where the path parameters start e.g. **https://httpbin.org/get;/param/value**.
+Note: You can indicate where the batch generator will start looking for path parameters by placing a **semicolon (;)** where the path parameters start (before a **/**) e.g. **https://httpbin.org/get;/param/value**.
 
 ### Validations
 
