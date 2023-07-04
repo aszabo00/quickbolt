@@ -19,6 +19,7 @@ def generate_batch(
     unsafe_bodies: bool = False,
     corrupt_query_params: bool = True,
     min: bool = True,
+    corrupt_keys: bool = False,
 ) -> list[dict]:
     """
     This generates url batches to feed into the aio_requests.request loader.
@@ -34,6 +35,7 @@ def generate_batch(
         unsafe_bodies: Whether to include unsafe bodies in the batch.
         corrupt_query_params: Whether to corrupt the query params.
         min: Whether to give the minimum amount of corruptions.
+        corrupt_keys: Whether to corrupt the keys of a data set.
 
     Returns:
         batch: The list of 200-500 request corruptions.
@@ -125,7 +127,9 @@ def generate_batch(
                     **{key: b, "description": f"{description}invalid"},
                     "code": "400",
                 }
-                for b in generate_bad_bodies(body, invalid_sub_values, min=min)
+                for b in generate_bad_bodies(
+                    body, invalid_sub_values, min=min, corrupt_keys=corrupt_keys
+                )
             ],
             *[
                 {
@@ -133,7 +137,7 @@ def generate_batch(
                     **{key: b, "description": f"{description}not found"},
                     "code": "404",
                 }
-                for b in generate_bad_bodies(body, min=min)
+                for b in generate_bad_bodies(body, min=min, corrupt_keys=corrupt_keys)
             ],
         ]
 
@@ -217,7 +221,10 @@ def generate_bad_urls(
 
 
 def generate_bad_bodies(
-    data: dict, sub_values: None | dict = None, min: bool = True
+    data: dict,
+    sub_values: None | dict = None,
+    min: bool = True,
+    corrupt_keys: bool = False,
 ) -> list[dict]:
     """
     This generates a list of bad bodies.
@@ -226,6 +233,7 @@ def generate_bad_bodies(
         data: A 200 type body.
         sub_values: Regex type substitutes for char type replacements.
         min: Whether to give the minimum amount of corruptions.
+        corrupt_keys: Whether to corrupt the keys of a data set.
 
     Returns:
         bad_data: The unflattened list of bad data for the request.
@@ -242,7 +250,7 @@ def generate_bad_bodies(
     data_copy_flat_ser = jh.serialize(corruptables)
 
     bad_combos_des = generate_bad_data(
-        data_copy_flat_ser, corruptables, sub_values, min
+        data_copy_flat_ser, corruptables, sub_values, min, corrupt_keys
     )
 
     if incorruptibles:
@@ -263,7 +271,11 @@ def generate_bad_bodies(
 
 
 def generate_bad_data(
-    data_flat_ser: str, corruptables: dict, sub_values: dict, min: bool = True
+    data_flat_ser: str,
+    corruptables: dict,
+    sub_values: dict,
+    min: bool = True,
+    corrupt_keys: bool = False,
 ) -> list[dict]:
     """
     This creates the corrupted combinations.
@@ -273,10 +285,25 @@ def generate_bad_data(
         corruptables: The values to target for corruption.
         sub_values: Regex type substitutes for char type replacements.
         min: Whether to give the minimum amount of corruptions.
+        corrupt_keys: Whether to corrupt the keys of a data set.
 
     Returns:
         bad_combos_des: The list of deserialized bad data for the request.
     """
+
+    def corruption_regex(value_str, active_sub_values):
+        corrupt_value = value_str
+
+        str_sub = active_sub_values.get("str")
+        if str_sub:
+            corrupt_value = re.sub(r"[a-zA-Z]", str_sub, corrupt_value)
+
+        digit_sub = active_sub_values.get("digit")
+        if digit_sub:
+            corrupt_value = re.sub(r"\d", digit_sub, corrupt_value)
+
+        return corrupt_value
+
     active_sub_values = {"str": "a", "digit": "0"}
     if isinstance(sub_values, dict):
         active_sub_values.update(sub_values)
@@ -290,7 +317,9 @@ def generate_bad_data(
 
     bad_combos = []
     for combo in combos:
-        bad_combo = data_flat_ser
+        bad_combo_value = data_flat_ser
+        bad_combo_key = data_flat_ser
+
         for key, value in combo:
             key_str = f'"{key}"'
 
@@ -298,20 +327,22 @@ def generate_bad_data(
                 value_str = f'"{value}"'
             else:
                 value_str = str(value)
-            corrupt_value = value_str
 
-            str_sub = active_sub_values.get("str")
-            if str_sub:
-                corrupt_value = re.sub(r"[a-zA-Z]", str_sub, corrupt_value)
-
-            digit_sub = active_sub_values.get("digit")
-            if digit_sub:
-                corrupt_value = re.sub(r"\d", digit_sub, corrupt_value)
-
-            bad_combo = bad_combo.replace(
+            corrupt_value = corruption_regex(value_str, active_sub_values)
+            bad_combo_value = bad_combo_value.replace(
                 f"{key_str}: {value_str}", f"{key_str}: {corrupt_value}"
             )
-        bad_combos.append(bad_combo)
+
+            corrupt_key = None
+            if corrupt_keys and len(corruptables) != len(combo):
+                corrupt_key = corruption_regex(key_str, {"str": "a"})
+                bad_combo_key = bad_combo_key.replace(
+                    f"{key_str}: {value_str}", f"{corrupt_key}: {value_str}"
+                )
+
+        bad_combos.append(bad_combo_value)
+        if corrupt_keys and corrupt_key:
+            bad_combos.append(bad_combo_key)
 
     return [jh.deserialize(b) for b in bad_combos]
 
