@@ -229,3 +229,143 @@ def test_generate_bad_bodies_sub_values():
         },
     ]
     assert bad_bodies == expected_bodies
+
+
+def test_generate_bad_bodies_corrupt_keys():
+    body = {
+        "str_one": "value1",
+        "int_one": 2,
+        "list_one": ["item1", "item2"],
+        "list_two": [0, 1],
+        "dict_one": {"str_two": "value2", "str_three": 3},
+    }
+    bad_bodies = bg.generate_bad_bodies(body, corrupt_keys=True)
+
+    expected_bodies = [
+        {
+            "str_one": "aaaaa0",
+            "int_one": 2,
+            "list_one": ["item1", "item2"],
+            "list_two": [0, 1],
+            "dict_one": {"str_two": "value2", "str_three": 3},
+        },
+        {
+            "aaa_aaa": "value1",
+            "int_one": 2,
+            "list_one": ["item1", "item2"],
+            "list_two": [0, 1],
+            "dict_one": {"str_two": "value2", "str_three": 3},
+        },
+        {
+            "str_one": "value1",
+            "int_one": 0,
+            "list_one": ["item1", "item2"],
+            "list_two": [0, 1],
+            "dict_one": {"str_two": "value2", "str_three": 3},
+        },
+        {
+            "str_one": "value1",
+            "aaa_aaa": 2,
+            "list_one": ["item1", "item2"],
+            "list_two": [0, 1],
+            "dict_one": {"str_two": "value2", "str_three": 3},
+        },
+        {
+            "str_one": "value1",
+            "int_one": 2,
+            "list_one": ["aaaa0", "item2"],
+            "list_two": [0, 1],
+            "dict_one": {"str_two": "value2", "str_three": 3},
+        },
+        {
+            "str_one": "value1",
+            "int_one": 2,
+            "aaaa_aaa": ["item1"],
+            "list_one": [{}, "item2"],
+            "list_two": [0, 1],
+            "dict_one": {"str_two": "value2", "str_three": 3},
+        },
+        {
+            "str_one": "value1",
+            "int_one": 2,
+            "list_one": ["item1", "aaaa0"],
+            "list_two": [0, 1],
+            "dict_one": {"str_two": "value2", "str_three": 3},
+        },
+        {
+            "str_one": "value1",
+            "int_one": 2,
+            "list_one": ["item1"],
+            "aaaa_aaa": [{}, "item2"],
+            "list_two": [0, 1],
+            "dict_one": {"str_two": "value2", "str_three": 3},
+        },
+        {
+            "str_one": "value1",
+            "int_one": 2,
+            "list_one": ["item1", "item2"],
+            "list_two": [0, 1],
+            "dict_one": {"str_two": "value2", "str_three": 3},
+        },
+        {
+            "str_one": "value1",
+            "int_one": 2,
+            "list_one": ["item1", "item2"],
+            "aaaa_aaa": [0],
+            "list_two": [{}, 1],
+            "dict_one": {"str_two": "value2", "str_three": 3},
+        },
+        {
+            "str_one": "value1",
+            "int_one": 2,
+            "list_one": ["item1", "item2"],
+            "list_two": [0, 0],
+            "dict_one": {"str_two": "value2", "str_three": 3},
+        },
+        {
+            "str_one": "value1",
+            "int_one": 2,
+            "list_one": ["item1", "item2"],
+            "list_two": [0],
+            "aaaa_aaa": [{}, 1],
+            "dict_one": {"str_two": "value2", "str_three": 3},
+        },
+        {
+            "str_one": "value1",
+            "int_one": 2,
+            "list_one": ["item1", "item2"],
+            "list_two": [0, 1],
+            "dict_one": {"str_two": "aaaaa0", "str_three": 3},
+        },
+        {
+            "str_one": "value1",
+            "int_one": 2,
+            "list_one": ["item1", "item2"],
+            "list_two": [0, 1],
+            "aaaa_aaa": {"aaa_aaa": "value2"},
+            "dict_one": {"str_three": 3},
+        },
+        {
+            "str_one": "value1",
+            "int_one": 2,
+            "list_one": ["item1", "item2"],
+            "list_two": [0, 1],
+            "dict_one": {"str_two": "value2", "str_three": 0},
+        },
+        {
+            "str_one": "value1",
+            "int_one": 2,
+            "list_one": ["item1", "item2"],
+            "list_two": [0, 1],
+            "dict_one": {"str_two": "value2"},
+            "aaaa_aaa": {"aaa_aaaaa": 3},
+        },
+        {
+            "str_one": "aaaaa0",
+            "int_one": 0,
+            "list_one": ["aaaa0", "aaaa0"],
+            "list_two": [0, 0],
+            "dict_one": {"str_two": "aaaaa0", "str_three": 0},
+        },
+    ]
+    assert bad_bodies == expected_bodies
