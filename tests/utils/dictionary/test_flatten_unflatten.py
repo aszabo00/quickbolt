@@ -9,6 +9,10 @@ test_dict_base = {
     "int1": 2,
     "list1": ["str1", "str2"],
     "list2": [0, 1, {"str3": 3}],
+    "empty_list1": [],
+    "empty_dict1": {},
+    "empty_str1": "",
+    "empty_tuple1": (),
 }
 test_dict = {**test_dict_base, **{"dict1": test_dict_base}}
 
@@ -20,6 +24,10 @@ expected_flat_dict = {
     "list2.0": 0,
     "list2.1": 1,
     "list2.2.str3": 3,
+    "empty_list1": [],
+    "empty_dict1": {},
+    "empty_str1": "",
+    "empty_tuple1": (),
     "dict1.str1": "value1",
     "dict1.int1": 2,
     "dict1.list1.0": "str1",
@@ -27,6 +35,10 @@ expected_flat_dict = {
     "dict1.list2.0": 0,
     "dict1.list2.1": 1,
     "dict1.list2.2.str3": 3,
+    "dict1.empty_list1": [],
+    "dict1.empty_dict1": {},
+    "dict1.empty_str1": "",
+    "dict1.empty_tuple1": (),
 }
 
 
