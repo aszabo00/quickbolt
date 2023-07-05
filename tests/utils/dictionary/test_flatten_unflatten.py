@@ -48,6 +48,30 @@ def test_flatten_dict():
     assert expected_flat_dict == flat_dict
 
 
+def test_flatten_non_dict():
+    flat_dict = dh.flatten("non_dict")
+    pytest.flat_non_dict = flat_dict
+    assert {"": "non_dict"} == flat_dict
+
+
+def test_flatten_empty_dict():
+    flat_dict = dh.flatten({})
+    pytest.flat_empty_dict = flat_dict
+    assert {"": {}} == flat_dict
+
+
 def test_unflatten_dict():
     unflat_dict = dh.unflatten(pytest.flat_dict)
     assert test_dict == unflat_dict
+
+
+def test_unflatten_non_dict():
+    original = "non_dict"
+    unflat_dict = dh.unflatten(pytest.flat_non_dict)
+    assert unflat_dict == original
+
+
+def test_unflatten_empty_dict():
+    original = {}
+    unflat_dict = dh.unflatten(pytest.flat_empty_dict)
+    assert unflat_dict == original

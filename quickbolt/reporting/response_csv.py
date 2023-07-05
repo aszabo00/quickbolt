@@ -21,12 +21,19 @@ async def read_csv(csv_path: None | str) -> list[list]:
     Returns:
         data: The rows of a csv file.
     """
+
+    def try_ast_eval(item):
+        try:
+            return ast.literal_eval(item)
+        except:
+            return item
+
     async with aopen(csv_path, encoding="ascii", newline="") as csv_file:
         data = [row async for row in AsyncReader(csv_file)]
 
     return [
         [
-            ast.literal_eval(item)
+            try_ast_eval(item)
             if (
                 not ("MultiDict" in item or "BufferedReader" in item)
                 and ("[" in item or "{" in item)
@@ -52,10 +59,12 @@ def scrub(text: str) -> str:
     # need to do better here
     text_dict = jh.deserialize(text)
     flat_scrubbed_text = dh.flatten(text_dict)
+
     for key, value in flat_scrubbed_text.items():
-        if not isinstance(value, str):
+        if isinstance(value, (int, float)):
             val_type = type(value).__name__
-            flat_scrubbed_text[key] = f"{value} ({val_type})"
+            flat_scrubbed_text[key] = f"{value} <{val_type}>"
+
     unflat_scrubbed_text = dh.unflatten(flat_scrubbed_text)
     scrubbed_text = jh.serialize(unflat_scrubbed_text)
 

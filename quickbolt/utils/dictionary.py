@@ -43,7 +43,6 @@ def unflatten(flat_dict: dict) -> dict | list:
     Returns:
         unflattened_dict: The unflattened dict.
     """
-    unflattened_dict = {}
 
     def assign(keys, value, d):
         key = keys.pop(0)
@@ -69,6 +68,11 @@ def unflatten(flat_dict: dict) -> dict | list:
                 else:
                     d[key] = [{}] if keys[0].isdigit() else {}
                     assign(keys, value, d[key])
+
+    if len(flat_dict) == 1 and "" in flat_dict:
+        return flat_dict[""]
+
+    unflattened_dict = {}
 
     for flat_key, value in flat_dict.items():
         keys = flat_key.split(".")
