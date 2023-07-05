@@ -13,6 +13,63 @@ url_query = "https://httpbin.org/get/houseId/1b?query=value1&query=value2"
 body = {"field1": "value1", "field2": 2, "field3": {"field4": "value2"}}
 
 
+def test_generate_batch_required_args_only():
+    batch = generate_batch("get", url_semi)
+
+    expected_batch = [
+        {
+            "code": "200",
+            "description": "good",
+            "method": "get",
+            "headers": {},
+            "url": "https://httpbin.org/houseId/1b",
+        },
+        {
+            "code": "400",
+            "description": "invalid",
+            "method": "get",
+            "headers": {},
+            "url": "https://httpbin.org/aaaaaaaaaaaaaaaaaaaaa/1b",
+        },
+        {
+            "code": "400",
+            "description": "invalid",
+            "method": "get",
+            "headers": {},
+            "url": "https://httpbin.org/houseId/999aaa",
+        },
+        {
+            "code": "400",
+            "description": "invalid",
+            "method": "get",
+            "headers": {},
+            "url": "https://httpbin.org/aaaaaaaaaaaaaaaaaaaaa/999aaa",
+        },
+        {
+            "code": "404",
+            "description": "not found",
+            "method": "get",
+            "headers": {},
+            "url": "https://httpbin.org/aaaaaaa/1b",
+        },
+        {
+            "code": "404",
+            "description": "not found",
+            "method": "get",
+            "headers": {},
+            "url": "https://httpbin.org/houseId/0a",
+        },
+        {
+            "code": "404",
+            "description": "not found",
+            "method": "get",
+            "headers": {},
+            "url": "https://httpbin.org/aaaaaaa/0a",
+        },
+    ]
+    assert batch == expected_batch
+
+
 def test_generate_batch():
     batch = generate_batch("get", url_semi, headers={"key1": "value1"})
 

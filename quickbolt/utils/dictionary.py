@@ -14,11 +14,17 @@ def flatten(d: dict | list) -> dict:
 
     def recurse(value, parent_key=""):
         if isinstance(value, list):
-            for i, v in enumerate(value):
-                recurse(v, f"{parent_key}.{i}" if parent_key else str(i))
+            if not value:
+                obj[parent_key] = value
+            else:
+                for i, v in enumerate(value):
+                    recurse(v, f"{parent_key}.{i}" if parent_key else str(i))
         elif isinstance(value, dict):
-            for k, v in value.items():
-                recurse(v, f"{parent_key}.{k}" if parent_key else k)
+            if not value:
+                obj[parent_key] = value
+            else:
+                for k, v in value.items():
+                    recurse(v, f"{parent_key}.{k}" if parent_key else k)
         else:
             obj[parent_key] = value
 

@@ -49,8 +49,12 @@ def generate_batch(
         "delete": "204",
     }[method]
 
+    headers = headers or {}
+    bad_headers = []
+    if headers:
+        bad_headers = generate_bad_bodies(headers, min=min)[:bad_header_count]
+
     invalid_sub_values = {"str": "aaa", "digit": "999"}
-    bad_headers = generate_bad_bodies(headers, min=min)[:bad_header_count]
     invalid_urls = generate_bad_urls(url, invalid_sub_values, corrupt_query_params, min)
     not_found_urls = generate_bad_urls(
         url, corrupt_query_params=corrupt_query_params, min=min
