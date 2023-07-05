@@ -1,6 +1,6 @@
 DESCRIPTION,CODE_MISMATCH,BATCH_NUMBER,INDEX,METHOD,EXPECTED_CODE,ACTUAL_CODE,MESSAGE,URL,SERVER_HEADERS,UTC_TIME,HEADERS,KWARGS,BODY,RESPONSE_SECONDS,DELAY_SECONDS
 ,,1,1,GET,,200,"{
-  ""id"": 0,
+  ""id"": ""0 <int>"",
   ""name"": ""Leanne Graham"",
   ""username"": ""Bret"",
   ""email"": ""0000000000000.biz"",
@@ -22,7 +22,7 @@ DESCRIPTION,CODE_MISMATCH,BATCH_NUMBER,INDEX,METHOD,EXPECTED_CODE,ACTUAL_CODE,ME
     ""bs"": ""harness real-time e-markets""
   }
 }",https://jsonplaceholder.typicode.com/users/0,"{
-  ""Date"": ""Wed, 00 Jun 0000 00:00:00 GMT"",
+  ""Date"": ""Wed, 00 Jul 0000 00:00:00 GMT"",
   ""Content-Type"": ""application/json; charset=utf-0"",
   ""Transfer-Encoding"": ""chunked"",
   ""Connection"": ""keep-alive"",
@@ -40,10 +40,10 @@ DESCRIPTION,CODE_MISMATCH,BATCH_NUMBER,INDEX,METHOD,EXPECTED_CODE,ACTUAL_CODE,ME
   ""Via"": ""0.0 vegur"",
   ""CF-Cache-Status"": ""HIT"",
   ""Age"": ""00000"",
-  ""Report-To"": ""{\""endpoints\"":[{\""url\"":\""https:\\/\\/a.nel.cloudflare.com\\/report\\/00?s=%000%0000000000000%00000000000000%000000000000000000000000000000000000000000000000000000000000000%000%000000000000000000000000000000000000000000000000%00000000000\""}],\""group\"":\""cf-nel\"",\""max_age\"":000000}"",
+  ""Report-To"": ""{\""endpoints\"":[{\""url\"":\""https:\\/\\/a.nel.cloudflare.com\\/report\\/00?s=00000000000000000000%000000000000%000%00000000000000000000000000%000000000000%000000000000000000000000000000000000000000000000000000000000000000000000%000000000\""}],\""group\"":\""cf-nel\"",\""max_age\"":000000}"",
   ""NEL"": ""{\""success_fraction\"":0,\""report_to\"":\""cf-nel\"",\""max_age\"":000000}"",
   ""Server"": ""cloudflare"",
   ""CF-RAY"": ""0000000000000000-EWR"",
   ""Content-Encoding"": ""gzip"",
   ""alt-svc"": ""00=\"":000\""; ma=00000""
-}",2023-06-28T19:53:43.393400+00:00,{},{},,0.12,0.0
+}",2023-07-05T05:29:59.666185+00:00,{},{},,0.11,0.0
