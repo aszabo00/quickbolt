@@ -1,3 +1,4 @@
+import re
 from typing import Any
 
 import orjson
@@ -47,6 +48,34 @@ def serialize(data: Any, other_exceptions: Any = None, safe=False) -> str:
         return data
 
 
+def squash_leading_zeros(text: str) -> str:
+    """
+    This removes leading zeros e.g. by squashing them.
+
+    Args:
+        text: The text to squash the zeros from.
+
+    Returns:
+        no_leading_zeros_text: The leading zeros free text.
+    """
+    marked_text = re.sub(r'"(.*?)"', r"\g<0>QUOTEMARKED", text)
+    marked_text_lines = marked_text.split("\n")
+
+    for i, line in enumerate(marked_text_lines):
+        split_line = line.split(":")
+        value = split_line[-1]
+        digits = re.findall(r'"?[+-]?(?:\d+(?:\.\d*)?|\.\d+)(?:[eE][+-]?\d+)?"?', value)
+
+        if "QUOTEMARKED" not in value and digits:
+            digits = digits[0]
+            if digits.isdigit() and len(digits) > 1:
+                new_value = re.sub(r"\b0+(?=\d)", "", digits)
+                new_line = line.replace(digits, new_value)
+                marked_text_lines[i] = new_line
+
+    return "\n".join(marked_text_lines).replace("QUOTEMARKED", "")
+
+
 def deserialize(text: str | bytes, other_exceptions: Any = None, safe=False) -> Any:
     """
     This converts json to its pythonic object.
@@ -62,10 +91,11 @@ def deserialize(text: str | bytes, other_exceptions: Any = None, safe=False) -> 
     other_exceptions = other_exceptions or []
     if not isinstance(other_exceptions, list):
         other_exceptions = [other_exceptions]
-    exceptions = [orjson.JSONDecodeError] + other_exceptions
+    exceptions = [orjson.JSONDecodeError, TypeError] + other_exceptions
 
     try:
-        return orjson.loads(text)
+        no_leading_zeros_text = squash_leading_zeros(text)
+        return orjson.loads(no_leading_zeros_text)
     except tuple(exceptions):
         if not safe:
             raise

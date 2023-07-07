@@ -4,7 +4,12 @@ import quickbolt.utils.json as jh
 
 pytestmark = pytest.mark.utils
 
-test_dict = {"str1": "value1", "int1": 2, "list1": ["str1", "str2"], "list2": [0, 1]}
+test_dict = {
+    "str1": "value1",
+    "int1": 2,
+    "list1": ["str1", "str2"],
+    "list2": [0, 1],
+}
 bad_test_dict = {"str1": str}
 
 
@@ -40,6 +45,27 @@ def test_deserialize():
     test_dict_json = jh.serialize(test_dict)
     data = jh.deserialize(test_dict_json)
     assert data == test_dict
+
+
+def test_deserialize_leading_zeros():
+    zeros_dict = {
+        **test_dict,
+        **{"leading_zeros": 0, "fake_leading_zeros": "0", "trick_zeros": 10},
+    }
+    zeros_dict_json = jh.serialize(zeros_dict)
+    zeros_dict_json = zeros_dict_json.replace("0", "000")
+
+    data = jh.deserialize(zeros_dict_json)
+    expected_data = {
+        "str1": "value1",
+        "int1": 2,
+        "list1": ["str1", "str2"],
+        "list2": [0, 1],
+        "leading_zeros": 0,
+        "fake_leading_zeros": "000",
+        "trick_zeros": 1000,
+    }
+    assert data == expected_data
 
 
 def test_not_deserialize_not_safe():
