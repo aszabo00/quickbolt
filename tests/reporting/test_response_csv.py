@@ -107,6 +107,29 @@ def test_scrub_data():
     assert scrubbed_data == expected_scrubbed_data
 
 
+def test_scrub_headers():
+    data = {
+        "actual_code": "200",
+        "headers": {
+            "field1": "Bearer 987644r8g789sd78d9s7f9s-qasdfvbn-97saaa7df9s-7s9s79f89s7f8s-89sf98sd79f87s9",
+            "field2": "Bearer 788887y8g789sd78d9s7f9s-qasdfvbn-97saaa7df9s-7s9s79f89s7f8s-89sf98sd79f87s9",
+        },
+        "body": pytest.test_field,
+        "message": pytest.test_field,
+    }
+    scrubbed_data = rc.scrub_data(data)
+    expected_scrubbed_data = {
+        "actual_code": "200",
+        "headers": {
+            "field1": "0000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+            "field2": "0000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+        },
+        "body": {"field": "000000000"},
+        "message": {"field": "000000000"},
+    }
+    assert scrubbed_data == expected_scrubbed_data
+
+
 @pytest.mark.asyncio
 async def test_csv_to_dict_path():
     response_dict = await rc.csv_to_dict(pytest.csv_path)
