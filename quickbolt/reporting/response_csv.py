@@ -46,12 +46,13 @@ async def read_csv(csv_path: None | str) -> list[list]:
     ]
 
 
-def scrub(text: str) -> str:
+def scrub(text: str, full: bool = False) -> str:
     """
     This scrubs text of alphanumerical information.
 
     Args:
         text: The text to scrub.
+        full: Full char conversion to 0's.
 
     Returns:
         scrubbed_text: The scrubbed text.
@@ -68,13 +69,17 @@ def scrub(text: str) -> str:
     unflat_scrubbed_text = dh.unflatten(flat_scrubbed_text)
     scrubbed_text = jh.serialize(unflat_scrubbed_text)
 
-    targets = re.findall(
-        r"([A-Za-z]+[\d@]+[\w@]*|[\d@]+[A-Za-z]+[\w@]*|\d+)", scrubbed_text
-    )
+    if full:
+        targets = list(flat_scrubbed_text.values())
+    else:
+        targets = re.findall(
+            r"([A-Za-z]+[\d@]+[\w@]*|[\d@]+[A-Za-z]+[\w@]*|\d+)", scrubbed_text
+        )
     targets.sort(key=len, reverse=True)
 
     for t in targets:
-        scrubbed_text = scrubbed_text.replace(t, "0" * len(t))
+        t_str = str(t)
+        scrubbed_text = scrubbed_text.replace(t_str, "0" * len(t_str))
 
     return scrubbed_text
 
@@ -93,9 +98,14 @@ def scrub_data(data: dict) -> dict:
 
     data_copy = deepcopy(data)
     for key, value in data_copy.items():
-        if key.lower() in scrub_fields:
+        key_lower = key.lower()
+        if key_lower in scrub_fields and value:
+            full = False
+            if key_lower == "headers":
+                full = True
+
             data_ser = jh.serialize(value)
-            data_scr = scrub(data_ser)
+            data_scr = scrub(data_ser, full)
             data_copy[key] = jh.deserialize(data_scr)
 
     return data_copy
