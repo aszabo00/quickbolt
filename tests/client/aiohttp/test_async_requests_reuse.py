@@ -5,6 +5,7 @@ import time
 import aiofiles.os as aos
 import pytest
 
+import quickbolt.reporting.response_csv as rc
 from quickbolt.clients import AioRequests
 
 pytestmark = pytest.mark.client
@@ -25,10 +26,12 @@ def event_loop():
 
 
 @pytest.mark.asyncio
-async def test_request(batch=None, delay=0, report=True, **kwargs):
+async def test_request(
+    batch=None, delay=0, report=True, full_scrub_fields=None, **kwargs
+):
     batch = batch or {"method": "get", "headers": pytest.headers, "url": pytest.url}
     response = await pytest.aio_requests.async_request(
-        batch, delay=delay, report=report, **kwargs
+        batch, delay=delay, report=report, full_scrub_fields=full_scrub_fields, **kwargs
     )
 
     assert response.get("duration")
@@ -85,6 +88,36 @@ async def test_request_delay():
 async def test_request_content_stream():
     stream_path = f"{pytest.run_info_path}/streamed_content.txt"
     await test_request(stream_path=stream_path)
+
+
+@pytest.mark.asyncio
+async def test_request_report_full_scrub_fields():
+    full_scrub_fields = ["message"]
+    await test_request(full_scrub_fields=full_scrub_fields)
+    expected_message = {
+        "id": "0000000",
+        "name": "0000000000000",
+        "username": "0000",
+        "email": "00000000000000000",
+        "address": {
+            "street": "00000000000",
+            "suite": "00000000",
+            "city": "00000000000",
+            "zipcode": "0000000000",
+            "geo": {"lat": "00000000", "lng": "0000000"},
+        },
+        "phone": "000000000000000000000",
+        "website": "0000000000000",
+        "company": {
+            "name": "000000000000000",
+            "catchPhrase": "00000000000000000000000000000000000000",
+            "bs": "000000000000000000000000000",
+        },
+    }
+
+    scrubbed_csv_path = pytest.aio_requests.csv_path.replace(".csv", "_scrubbed.csv")
+    scrubbed_dict = await rc.csv_to_dict(scrubbed_csv_path)
+    assert scrubbed_dict[-1]["MESSAGE"] == expected_message
 
 
 @pytest.mark.asyncio

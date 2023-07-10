@@ -107,7 +107,8 @@ def test_scrub_data():
     assert scrubbed_data == expected_scrubbed_data
 
 
-def test_scrub_headers():
+def test_scrub_full_fields():
+    full_scrub_fields = ["headers", "kwargs"]
     data = {
         "actual_code": "200",
         "headers": {
@@ -116,8 +117,9 @@ def test_scrub_headers():
         },
         "body": pytest.test_field,
         "message": pytest.test_field,
+        "kwargs": {"field": "87787-5343-some_data-2322"},
     }
-    scrubbed_data = rc.scrub_data(data)
+    scrubbed_data = rc.scrub_data(data, full_scrub_fields)
     expected_scrubbed_data = {
         "actual_code": "200",
         "headers": {
@@ -126,6 +128,7 @@ def test_scrub_headers():
         },
         "body": {"field": "000000000"},
         "message": {"field": "000000000"},
+        "kwargs": {"field": "0000000000000000000000000"},
     }
     assert scrubbed_data == expected_scrubbed_data
 
@@ -154,6 +157,32 @@ async def test_csv_to_dict_path_scrub_data():
     assert response_dict
     assert isinstance(response_dict[0], dict)
     assert response_dict[0]["HEADERS"] == {"field": "000000000"}
+
+
+@pytest.mark.asyncio
+async def test_csv_to_dict_path_scrub_data_full_fields():
+    full_scrub_fields = ["headers", "message"]
+    response_csv = await rc.read_csv(pytest.csv_path)
+    response_csv[1][11] = pytest.test_field
+    response_dict = await rc.csv_to_dict(
+        response_csv, scrub=True, full_scrub_fields=full_scrub_fields
+    )
+
+    assert response_dict
+    assert isinstance(response_dict[0], dict)
+    assert response_dict[0]["HEADERS"] == {"field": "000000000"}
+    assert response_dict[0]["MESSAGE"] == {
+        "args": 0,
+        "headers": {
+            "Accept": "000",
+            "Accept-Encoding": "0000000000000",
+            "Host": "00000000000",
+            "User-Agent": "0000000000000000000000000",
+            "X-Amzn-Trace-Id": "0000000000000000000000000000000000000000",
+        },
+        "origin": "0000000000000",
+        "url": "00000000000000000000000",
+    }
 
 
 @pytest.mark.asyncio

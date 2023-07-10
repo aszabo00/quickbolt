@@ -225,6 +225,7 @@ class AioRequests(object):
         data: list[dict] | dict,
         delay: int | float = 0,
         report: bool = True,
+        full_scrub_fields: None | list = None,
         **kwargs: Any,
     ) -> dict:
         """
@@ -234,19 +235,27 @@ class AioRequests(object):
             data: The list of info needed to make the request eg [{'url': ..., 'method': 'get'}].
             delay: How long to delay between requests.
             report: Whether to create or update a report with the current responses.
+            full_scrub_fields: The fields to do a full char scrub on.
             **kwargs: The additional params eg headers or data etc. See
                 https://docs.aiohttp.org/en/stable/client_reference.html for more details.
 
         Returns:
             responses: The global response object eg {'duration': ..., 'responses': ...}.
         """
-        return await self.async_request(data=data, delay=delay, report=report, **kwargs)
+        return await self.async_request(
+            data=data,
+            delay=delay,
+            report=report,
+            full_scrub_fields=full_scrub_fields,
+            **kwargs,
+        )
 
     async def async_request(
         self,
         data: list[dict] | dict,
         delay: int | float = 0,
         report: bool = True,
+        full_scrub_fields: None | list = None,
         **kwargs: Any,
     ) -> dict:
         """
@@ -256,6 +265,7 @@ class AioRequests(object):
             data: The list of info needed to make the request eg [{'url': ..., 'method': 'get'}].
             delay: How long to delay between requests.
             report: Whether to create or update a report with the current responses.
+            full_scrub_fields: The fields to do a full char scrub on.
             **kwargs: The additional params eg headers or data etc. See
                 https://docs.aiohttp.org/en/stable/client_reference.html for more details.
 
@@ -277,5 +287,7 @@ class AioRequests(object):
         await self.logger.info(f'The batch duration was {_return["duration"]} seconds.')
 
         if _return["responses"]:
-            not report or await rc.create_csv_report(self.csv_path, _return, scrub=True)
+            not report or await rc.create_csv_report(
+                self.csv_path, _return, scrub=True, full_scrub_fields=full_scrub_fields
+            )
         return _return
