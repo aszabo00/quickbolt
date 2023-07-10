@@ -61,39 +61,46 @@ def scrub(text: str, full: bool = False) -> str:
     text_dict = jh.deserialize(text)
     flat_scrubbed_text = dh.flatten(text_dict)
 
+    targets = []
     for key, value in flat_scrubbed_text.items():
         if isinstance(value, (int, float)):
             val_type = type(value).__name__
             flat_scrubbed_text[key] = f"{value} <{val_type}>"
 
+        target_str = str(flat_scrubbed_text[key])
+        target = [target_str]
+        if not full:
+            target = re.findall(
+                r"([A-Za-z]+[\d@]+[\w@]*|[\d@]+[A-Za-z]+[\w@]*|\d+)",
+                target_str,
+            )
+        targets.extend(target)
+    targets.sort(key=len, reverse=True)
+
     unflat_scrubbed_text = dh.unflatten(flat_scrubbed_text)
     scrubbed_text = jh.serialize(unflat_scrubbed_text)
 
-    if full:
-        targets = list(flat_scrubbed_text.values())
-    else:
-        targets = re.findall(
-            r"([A-Za-z]+[\d@]+[\w@]*|[\d@]+[A-Za-z]+[\w@]*|\d+)", scrubbed_text
-        )
-    targets.sort(key=len, reverse=True)
-
     for t in targets:
-        t_str = str(t)
-        scrubbed_text = scrubbed_text.replace(t_str, "0" * len(t_str))
+        scrubbed_text = scrubbed_text.replace(t, "0" * len(t))
 
     return scrubbed_text
 
 
-def scrub_data(data: dict) -> dict:
+def scrub_data(data: dict, full_scrub_fields: None | list = None) -> dict:
     """
     This scrubs a dict against pre-defined fields.
 
     Args:
         data: A response report object.
+        full_scrub_fields: The fields to do a full char scrub on.
 
     Returns:
         scrubbed_data: A scrubbed response report object.
     """
+    if not isinstance(full_scrub_fields, list):
+        full_scrub_fields = ["headers"]
+    full_scrub_fields = [f.lower() for f in full_scrub_fields]
+
     scrub_fields = ["message", "url", "server_headers", "headers", "kwargs", "body"]
 
     data_copy = deepcopy(data)
@@ -101,7 +108,7 @@ def scrub_data(data: dict) -> dict:
         key_lower = key.lower()
         if key_lower in scrub_fields and value:
             full = False
-            if key_lower == "headers":
+            if key_lower in full_scrub_fields:
                 full = True
 
             data_ser = jh.serialize(value)
@@ -111,12 +118,15 @@ def scrub_data(data: dict) -> dict:
     return data_copy
 
 
-async def csv_to_dict(csv_data: str | list, scrub: bool = False) -> list[dict]:
+async def csv_to_dict(
+    csv_data: str | list, scrub: bool = False, full_scrub_fields: None | list = None
+) -> list[dict]:
     """
 
     Args:
         csv_data: The path to the csv file to be read in or the data itself.
         scrub: Whether to remove sensitive info from the data.
+        full_scrub_fields: The fields to do a full char scrub on.
 
     Returns:
         data: The csv file represented as a dictionary.
@@ -128,7 +138,7 @@ async def csv_to_dict(csv_data: str | list, scrub: bool = False) -> list[dict]:
         data = [dict(zip(csv_data[0], r)) for r in csv_data[1:] if r]
 
     if scrub:
-        data = [scrub_data(d) for d in data]
+        data = [scrub_data(d, full_scrub_fields=full_scrub_fields) for d in data]
 
     for row in data:
         for k, v in row.items():
@@ -138,7 +148,12 @@ async def csv_to_dict(csv_data: str | list, scrub: bool = False) -> list[dict]:
     return data
 
 
-async def create_csv_report(csv_path: str, _return: dict, scrub: bool = False):
+async def create_csv_report(
+    csv_path: str,
+    _return: dict,
+    scrub: bool = False,
+    full_scrub_fields: None | list = None,
+):
     """
     This writes the results of each batch of requests to a csv report file.
 
@@ -146,6 +161,7 @@ async def create_csv_report(csv_path: str, _return: dict, scrub: bool = False):
         csv_path: The path to store the csv report.
         _return: The _return from a batch request.
         scrub: Whether to remove sensitive info from the data.
+        full_scrub_fields: The fields to do a full char scrub on.
     """
     responses = _return["responses"]
 
@@ -185,7 +201,10 @@ async def create_csv_report(csv_path: str, _return: dict, scrub: bool = False):
             {k: v if k != "curl" else "" for k, v in r.copy().items()}
             for r in responses
         ]
-        scrubbed_responses = [scrub_data(r) for r in scrubbed_responses]
+        scrubbed_responses = [
+            scrub_data(r, full_scrub_fields=full_scrub_fields)
+            for r in scrubbed_responses
+        ]
 
         col_titles = [""]
         if not await aos.path.exists(scrubbed_csv_path):
