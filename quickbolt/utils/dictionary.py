@@ -46,39 +46,40 @@ def unflatten(flat_dict: dict) -> dict | list:
 
     def assign(keys, value, d):
         key = keys.pop(0)
-        if len(keys) == 0:
-            if key.isdigit():
-                while len(d) <= int(key):
-                    d.append(None)
-                d[int(key)] = value
-            else:
-                d[key] = value
+
+        if key.isdigit():
+            key = int(key)
+            if isinstance(d, dict):
+                d = [d]
+            while len(d) <= key:
+                d.append(None)
         else:
-            if key.isdigit():
-                if int(key) < len(d):
-                    assign(keys, value, d[int(key)])
-                else:
-                    while len(d) < int(key):
-                        d.append({})
-                    d.append({})
-                    assign(keys, value, d[int(key)])
+            if isinstance(d, list):
+                d[-1] = {}
+
+        if len(keys) == 0:
+            d[key] = value
+        else:
+            if isinstance(d, list):
+                d[key] = assign(
+                    keys, value, d[key] if key < len(d) and d[key] is not None else {}
+                )
             else:
-                if key in d.keys():
-                    assign(keys, value, d[key])
-                else:
-                    d[key] = [{}] if keys[0].isdigit() else {}
-                    assign(keys, value, d[key])
+                d[key] = assign(
+                    keys, value, d.get(key, [{}] if keys[0].isdigit() else {})
+                )
+
+        return d
 
     if len(flat_dict) == 1 and "" in flat_dict:
         return flat_dict[""]
 
-    unflattened_dict = {}
-
+    unflattened = {}
     for flat_key, value in flat_dict.items():
         keys = flat_key.split(".")
-        assign(keys, value, unflattened_dict)
+        unflattened = assign(keys, value, unflattened)
 
-    return unflattened_dict
+    return unflattened
 
 
 def compare_dictionaries(
