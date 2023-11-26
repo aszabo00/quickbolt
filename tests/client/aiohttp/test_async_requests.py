@@ -82,6 +82,7 @@ def test_post_string_request():
         }
     )["responses"][0]
 
+    assert response["actual_code"] == "201"
     assert response["message"]["title"] == payload["title"]
     assert response["message"]["body"] == payload["body"]
 
