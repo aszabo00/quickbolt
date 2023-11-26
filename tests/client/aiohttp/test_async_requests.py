@@ -1,4 +1,5 @@
 import asyncio
+import json
 import os
 import time
 
@@ -12,6 +13,7 @@ pytestmark = pytest.mark.client
 root_dir = f"{os.path.dirname(__file__)}/{__name__.split('.')[-1]}"
 headers = {}
 url = "https://jsonplaceholder.typicode.com/users/1"
+post_url = "https://jsonplaceholder.typicode.com/posts"
 
 
 def test_request(
@@ -61,6 +63,27 @@ def test_request(
         asyncio.run(pytest.aio_requests.logging.delete_run_info(root_dir))
         path = pytest.aio_requests.logging.log_file_path
         assert not os.path.exists(path)
+
+
+def test_post_string_request():
+    pytest.aio_requests = AioRequests(root_dir=root_dir)
+    pytest.run_info_path = pytest.aio_requests.logging.run_info_path
+    payload = {
+        "title": "test title",
+        "body": "test body message",
+    }
+
+    response = pytest.aio_requests.request(
+        {
+            "url": post_url,
+            "method": "post",
+            "headers": {"Content-Type": "application/json"},
+            "data": json.dumps(payload),
+        }
+    )["responses"][0]
+
+    assert response["message"]["title"] == payload["title"]
+    assert response["message"]["body"] == payload["body"]
 
 
 def test_request_multiple():

@@ -113,7 +113,11 @@ class AioRequests(object):
             agg_delay += delay
             f_data = d.get("data")
 
-            if f_data and not isinstance(f_data, FormData) and not isinstance(f_data, str):
+            if (
+                f_data
+                and not isinstance(f_data, FormData)
+                and not isinstance(f_data, str)
+            ):
                 f_data = await self.dict_as_form_data(**f_data)
 
             data[i] = {**d, "delay": round(agg_delay, 2), "index": i, "data": f_data}
