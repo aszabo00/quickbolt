@@ -11,5 +11,6 @@
 *idea
 *mb*.css
 *.pyc
+*pytest_run_output*.*
 
 *docstrings

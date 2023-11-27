@@ -33,17 +33,41 @@ aiocsv = "^1.2.4"
 uvloop = "^0.17.0"
 
 [tool.poetry.group.dev.dependencies]
-black = "^23.3.0"
-autoflake = "^2.1.1"
-flake8 = "^6.0.0"
-isort = "^5.12.0"
 pytest-cov = "^4.1.0"
+black = "^23.3.0"
+ruff = "^0.0.275"
+mypy = "^1.4.1"
+isort = "^5.12.0"
+
+[[tool.mypy.overrides]]
+module = "quickbolt.*"
+warn_unused_ignores = false
+ignore_missing_imports = true
+
+[tool.ruff]
+select = [
+    "E",  # pycodestyle errors
+    "W",  # pycodestyle warnings
+    "F",  # pyflakes
+    "I",  # isort
+    "C",  # flake8-comprehensions
+    "B",  # flake8-bugbear
+]
+
+ignore = [
+    "E501",  # line too long, handled by black
+    "B008",  # do not perform function calls in argument defaults
+    "C901",  # too complex
+]
+
+[tool.ruff.isort]
+known-third-party = ["quickbolt"]
+
+#[tool.isort]
+#profile = "black" 
+#known_first_party = "quickbolt"
+#sections = "FUTURE,STDLIB,THIRDPARTY,FIRSTPARTY,LOCALFOLDER"
 
 [build-system]
 requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
-
-[tool.isort]
-profile = "black" 
-known_first_party = "quickbolt"
-sections = "FUTURE,STDLIB,THIRDPARTY,FIRSTPARTY,LOCALFOLDER"

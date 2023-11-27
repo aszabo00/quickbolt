@@ -1,8 +1,8 @@
 import asyncio
-import json
 import os
 import time
 
+import orjson
 import pytest
 
 import quickbolt.reporting.response_csv as rc
@@ -17,7 +17,13 @@ post_url = "https://jsonplaceholder.typicode.com/posts"
 
 
 def test_request(
-    batch=None, delay=0, report=True, full_scrub_fields=None, delete=True, **kwargs
+    batch=None,
+    delay=0,
+    report=True,
+    full_scrub_fields=None,
+    delete=True,
+    actual_code="200",
+    **kwargs,
 ):
     pytest.aio_requests = AioRequests(root_dir=root_dir)
     pytest.run_info_path = pytest.aio_requests.logging.run_info_path
@@ -51,7 +57,7 @@ def test_request(
     for field in response_fields:
         assert responses[0].get(field, "missing") != "missing"
 
-    assert responses[0].get("actual_code") == "200"
+    assert responses[0].get("actual_code") == actual_code
 
     stream_path = kwargs.get("stream_path")
     if stream_path:
@@ -64,25 +70,25 @@ def test_request(
         path = pytest.aio_requests.logging.log_file_path
         assert not os.path.exists(path)
 
+    return response
+
 
 def test_post_string_request():
-    pytest.aio_requests = AioRequests(root_dir=root_dir)
-    pytest.run_info_path = pytest.aio_requests.logging.run_info_path
     payload = {
         "title": "test title",
         "body": "test body message",
     }
 
-    response = pytest.aio_requests.request(
-        {
-            "url": post_url,
-            "method": "post",
-            "headers": {"Content-Type": "application/json"},
-            "data": json.dumps(payload),
-        }
-    )["responses"][0]
+    batch = {
+        "url": post_url,
+        "method": "post",
+        "headers": {"Content-Type": "application/json"},
+        "data": orjson.dumps(payload).decode(),
+    }
 
-    assert response["actual_code"] == "201"
+    responses = test_request(batch, actual_code="201")
+    response = responses["responses"][0]
+
     assert response["message"]["title"] == payload["title"]
     assert response["message"]["body"] == payload["body"]
 

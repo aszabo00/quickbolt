@@ -29,6 +29,18 @@ async def test_validate_references():
 
 
 @pytest.mark.asyncio
+async def test_validate_references_skipped_keys():
+    validations = Validations(root_dir=pytest.root_dir)
+    actual_path = f"{pytest.root_dir}/get_example_scrubbed_mismatch.csv"
+    skipped_keys = ["ACTUAL_CODE"]
+    mismatches = await validations.validate_references(
+        actual_path, skipped_keys=skipped_keys
+    )
+    assert not mismatches
+    await validations.logging.delete_run_info()
+
+
+@pytest.mark.asyncio
 async def test_validate_references_mismatch(safe=True):
     validations = Validations(root_dir=pytest.root_dir)
     actual_path = f"{pytest.root_dir}/get_example_scrubbed_mismatch.csv"

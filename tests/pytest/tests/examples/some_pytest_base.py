@@ -37,7 +37,7 @@ class SomePytestBase(CorePytestBase):
             "pass/get.log",
             "pass/get_scrubbed.csv",
         ]
-        assert files == expected_files
+        assert sorted(files) == sorted(expected_files)
 
         logs = [r async for r in self.aio_requests.logging.read_log_file()]
         checks = ["making", "made", "returning", "batch duration"]

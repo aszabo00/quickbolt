@@ -2,6 +2,7 @@ import asyncio
 import os
 import time
 
+import orjson
 import pytest
 
 import quickbolt.reporting.response_csv as rc
@@ -12,10 +13,17 @@ pytestmark = pytest.mark.client
 root_dir = f"{os.path.dirname(__file__)}/{__name__.split('.')[-1]}"
 headers = {}
 url = "https://jsonplaceholder.typicode.com/users/1"
+post_url = "https://jsonplaceholder.typicode.com/posts"
 
 
 def test_request(
-    batch=None, delay=0, report=True, full_scrub_fields=None, delete=True, **kwargs
+    batch=None,
+    delay=0,
+    report=True,
+    full_scrub_fields=None,
+    delete=True,
+    actual_code="200",
+    **kwargs,
 ):
     pytest.httpx_requests = HttpxRequests(root_dir=root_dir)
     pytest.run_info_path = pytest.httpx_requests.logging.run_info_path
@@ -49,7 +57,7 @@ def test_request(
     for field in response_fields:
         assert responses[0].get(field, "missing") != "missing"
 
-    assert responses[0].get("actual_code") == "200"
+    assert responses[0].get("actual_code") == actual_code
     assert responses[0].get("message")
 
     stream_path = kwargs.get("stream_path")
@@ -62,6 +70,28 @@ def test_request(
         assert not os.path.exists(path)
 
     assert pytest.httpx_requests.client is None
+
+    return response
+
+
+def test_post_string_request():
+    payload = {
+        "title": "test title",
+        "body": "test body message",
+    }
+
+    batch = {
+        "url": post_url,
+        "method": "post",
+        "headers": {"Content-Type": "application/json"},
+        "data": orjson.dumps(payload).decode(),
+    }
+
+    responses = test_request(batch, actual_code="201")
+    response = responses["responses"][0]
+
+    assert response["message"]["title"] == payload["title"]
+    assert response["message"]["body"] == payload["body"]
 
 
 def test_request_multiple():

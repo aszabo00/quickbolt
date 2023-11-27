@@ -117,8 +117,13 @@ class HttpxRequests(object):
 
             if f_data:
                 body = f_data
-                if any(isinstance(field, str | bytes) for field in ["file", "files"]):
-                    body = await self.separate_form_data(**f_data)
+                if isinstance(body, dict) and any(
+                    isinstance(body.get(field), str | bytes)
+                    for field in ["file", "files"]
+                ):
+                    body = await self.separate_form_data(**body)
+                else:
+                    body = {"data": body}
                 d.update(body)
             data[i] = d
 

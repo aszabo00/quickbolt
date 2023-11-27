@@ -19,8 +19,12 @@
 		"vscode": {
 			"extensions": [
 				"donjayamanne.python-extension-pack",
-				"ms-python.isort",
-				"GrapeCity.gc-excelviewer"
+				"GrapeCity.gc-excelviewer",
+				"charliermarsh.ruff",
+				"matangover.mypy",
+				"mhutchie.git-graph",
+				"ms-python.black-formatter",
+				"yzhang.markdown-all-in-one"
 			]
 		}
 	}
