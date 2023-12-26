@@ -1,8 +1,18 @@
-# Quickbolt 
+# Quickbolt <!-- omit from toc -->
 
 Asynchronously make and validate requests!
 
 This was forked from [api-automation-tools](https://github.com/rakutentech/api-automation-tools).
+
+## Table of contents <!-- omit from toc -->
+- [Installation](#installation)
+- [Usage](#usage)
+  - [Pytest](#pytest)
+  - [Async requests with aiohttp or httpx](#async-requests-with-aiohttp-or-httpx)
+  - [Async calls with grpc](#async-calls-with-grpc)
+  - [Validations](#validations)
+  - [Examples](#examples)
+- [Project structure](#project-structure)
 
 ## Installation
 
@@ -50,6 +60,29 @@ responses = httpx_requests.request(batch)
 Note: Both clients have an awaitable request method called async_request e.g. **await aiohttp_requests.async_request(...)** or **await httpx_requests.async_request(...)**.
 
 Note: You can indicate where the batch generator will start looking for path parameters by placing a **semicolon (;)** where the path parameters start (before a **/**) e.g. **https://httpbin.org/get;/param/value**.
+
+### Async calls with grpc
+
+Make single or batched style async calls using grpc. Each call method call will generate a csv containing useful data about the call(s).
+
+See [here](https://grpc.io/docs/languages/python/quickstart/) for a quick tutorial on the mechanics of making grpc calls.
+
+```python
+from quickbolt.clients import AioGPRC
+from tests.client.gprc.servers import helloworld_pb2, helloworld_pb2_grpc
+
+aio_grpc = AioGPRC()
+
+options = {
+    "address": "localhost:50051", # the address of the server
+    "stub": helloworld_pb2_grpc.GreeterStub, # the stub class reference of the service
+    "method": "SayHello", # the service method to call
+    "method_args": helloworld_pb2.HelloRequest(name="Quickbolt"), # the args the service method accepts
+}
+responses = await pytest.aio_grpc.call(options)
+```
+
+_Note: Generate batch is not supported for async grpc calls._
 
 ### Validations
 

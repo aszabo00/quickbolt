@@ -77,8 +77,8 @@ class Validations(object):
 
         if len(_actual_refs) != len(_expected_refs):
             message = (
-                f"Test completed HOWEVER, verification isn't possible as the "
-                f"actual and expected reference files aren't the same size."
+                "Test completed HOWEVER, verification isn't possible as the "
+                "actual and expected reference files aren't the same size. Check validation csv existence."
             )
             await self.fail(message)
 

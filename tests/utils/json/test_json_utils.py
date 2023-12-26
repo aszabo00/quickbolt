@@ -31,7 +31,7 @@ def test_serialize():
 def test_serialize_not_safe():
     try:
         jh.serialize(bad_test_dict, safe=False)
-        assert False
+        raise AssertionError()
     except:
         pass
 
@@ -71,7 +71,7 @@ def test_deserialize_leading_zeros():
 def test_not_deserialize_not_safe():
     try:
         jh.deserialize(bad_test_dict, safe=False)
-        assert False
+        raise AssertionError()
     except:
         pass
 

@@ -33,7 +33,7 @@ def test_request(
         batch, delay=delay, report=report, full_scrub_fields=full_scrub_fields, **kwargs
     )
 
-    assert response.get("duration")
+    assert response.get("duration") is not None
 
     responses = response.get("responses")
     assert responses

@@ -7,6 +7,7 @@ from typing import Any
 
 import aiofiles.os as aos
 import pypeln as pl
+from aiofiles import open as aopen
 from httpx import AsyncClient
 
 import quickbolt.reporting.response_csv as rc
@@ -163,9 +164,9 @@ class HttpxRequests(object):
         response_seconds = round((t1 - t0).total_seconds(), 2)
 
         if stream_path:
-            with open(stream_path, "wb") as fd:
+            async with aopen(stream_path, "wb") as fd:
                 async for content in response.aiter_bytes(1024):
-                    fd.write(content)
+                    await fd.write(content)
 
         message = response.text
         try:

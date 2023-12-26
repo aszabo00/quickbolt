@@ -68,10 +68,10 @@ async def test_validate_references_mismatch(safe=True):
 async def test_validate_references_mismatch_not_safe():
     try:
         await test_validate_references_mismatch(safe=False)
-        raise AssertionError
+        raise AssertionError()
     except Exception as e:
         if isinstance(e, AssertionError):
-            assert False
+            raise AssertionError()
     await Validations(root_dir=pytest.root_dir).logging.delete_run_info()
 
 

@@ -1,5 +1,3 @@
 #!/bin/bash
 
-isort .
-black .
-# ruff check .
+ruff check ../.

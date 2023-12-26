@@ -378,7 +378,7 @@ def generate_unsafe_bodies(body: dict) -> list[dict]:
     combinations = [
         c
         for c in it.combinations(germs, num_combinations)
-        if len(set([i[0] for i in c])) > num_combinations - 1
+        if len({i[0] for i in c}) > num_combinations - 1
     ]
 
     return [

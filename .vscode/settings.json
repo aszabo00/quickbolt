@@ -1,15 +1,8 @@
 {
-    "workbench.startupEditor": "none",
     "explorer.autoReveal": false,
-    "explorer.confirmDragAndDrop": false,
     "editor.formatOnSave": true,
     "editor.codeActionsOnSave": {
-        // "source.fixAll": true,
-        "source.organizeImports": true
-    },
-    "python.testing.pytestEnabled": true,
-    "python.formatting.provider": "black",
-    "python.linting.pylintenabled": true,
-    "python.linting.mypyEnabled": true,
-    "python.defaultInterpreterPath": "/usr/local/bin/python"
+        "source.organizeImports": "explicit",
+        "source.fixAll": "explicit"
+    }
 }
