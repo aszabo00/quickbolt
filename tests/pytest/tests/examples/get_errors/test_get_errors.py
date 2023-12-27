@@ -12,7 +12,7 @@ pytestmark = pytest.mark.core_pytest_base
 
 class TestGetExample:
     file_path = Path(__file__)
-    root_dir = str(Path().joinpath(*file_path.parts[:-3]))
+    root_dir = str(Path().joinpath(*file_path.parts[:-4]))
     purge_run_info = True
 
     headers = {}

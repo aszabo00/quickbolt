@@ -6,12 +6,12 @@ from pathlib import Path
 from shutil import rmtree
 from typing import Generator
 
-import __main__ as main
 from aiofiles import open as aopen
 from aiologger import Logger
 from aiologger.formatters.base import Formatter
 from aiologger.handlers.files import AsyncFileHandler
 
+import __main__ as main
 import quickbolt.utils.directory as dh
 
 
@@ -20,7 +20,7 @@ class AsyncLogger(object):
     This is a wrapper around the async aio logging module.
     """
 
-    def __init__(self, root_dir: None | str = None, by_time: bool = False) -> Logger:
+    def __init__(self, root_dir: None | str = None, by_time: bool = False):
         """
         This gets the logger.
 

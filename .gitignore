@@ -1,5 +1,6 @@
 *__pycache__
 *pytest_cache
+*ruff_cache
 *run_info*
 
 *.egg-info
@@ -11,5 +12,6 @@
 *idea
 *mb*.css
 *.pyc
+*pytest_run_output*.*
 
 *docstrings

@@ -1,15 +1,8 @@
 {
+    "explorer.autoReveal": false,
     "editor.formatOnSave": true,
-    "python.formatting.provider": "black",
-    "python.testing.pytestEnabled": true,
-    "isort.args": [
-        "--profile",
-        "black"
-    ],
     "editor.codeActionsOnSave": {
-        "source.organizeImports": true
-    },
-    "explorer.confirmDragAndDrop": false,
-    "workbench.startupEditor": "none",
-    "explorer.autoReveal": false
+        "source.organizeImports": "explicit",
+        "source.fixAll": "explicit"
+    }
 }

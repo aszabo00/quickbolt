@@ -7,6 +7,7 @@ from typing import Any
 
 import aiofiles.os as aos
 import pypeln as pl
+from aiofiles import open as aopen
 from httpx import AsyncClient
 
 import quickbolt.reporting.response_csv as rc
@@ -117,8 +118,13 @@ class HttpxRequests(object):
 
             if f_data:
                 body = f_data
-                if any(isinstance(field, str | bytes) for field in ["file", "files"]):
-                    body = await self.separate_form_data(**f_data)
+                if isinstance(body, dict) and any(
+                    isinstance(body.get(field), str | bytes)
+                    for field in ["file", "files"]
+                ):
+                    body = await self.separate_form_data(**body)
+                else:
+                    body = {"data": body}
                 d.update(body)
             data[i] = d
 
@@ -158,9 +164,9 @@ class HttpxRequests(object):
         response_seconds = round((t1 - t0).total_seconds(), 2)
 
         if stream_path:
-            with open(stream_path, "wb") as fd:
+            async with aopen(stream_path, "wb") as fd:
                 async for content in response.aiter_bytes(1024):
-                    fd.write(content)
+                    await fd.write(content)
 
         message = response.text
         try:

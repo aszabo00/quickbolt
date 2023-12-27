@@ -8,6 +8,7 @@ from typing import Any
 
 import orjson
 import pypeln as pl
+from aiofiles import open as aopen
 from aiohttp import ClientSession, FormData, TCPConnector
 
 import quickbolt.reporting.response_csv as rc
@@ -38,7 +39,7 @@ class AioRequests(object):
         self.reuse = reuse
 
         self.batch_number = 0
-        self._return_history = []
+        self._return_history: list = []
 
     async def close(self):
         if self.session is not None:
@@ -113,7 +114,11 @@ class AioRequests(object):
             agg_delay += delay
             f_data = d.get("data")
 
-            if f_data and not isinstance(f_data, FormData):
+            if (
+                f_data
+                and not isinstance(f_data, FormData)
+                and not isinstance(f_data, str)
+            ):
                 f_data = await self.dict_as_form_data(**f_data)
 
             data[i] = {**d, "delay": round(agg_delay, 2), "index": i, "data": f_data}
@@ -152,9 +157,9 @@ class AioRequests(object):
             response_seconds = round((t1 - t0).total_seconds(), 2)
 
             if stream_path:
-                with open(stream_path, "wb") as fd:
+                async with aopen(stream_path, "wb") as fd:
                     async for content in response.content.iter_chunked(1024):
-                        fd.write(content)
+                        await fd.write(content)
 
             try:
                 message = await response.json(loads=orjson.loads)

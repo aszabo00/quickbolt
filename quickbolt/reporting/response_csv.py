@@ -166,7 +166,7 @@ async def create_csv_report(
     responses = _return["responses"]
 
     for r in responses:
-        r["server_headers"] = {k: v for k, v in r["server_headers"].items()}
+        r["server_headers"] = dict(r["server_headers"])
 
         kwargs = r.get("kwargs", {})
         r["body"] = kwargs.pop("json", {}) or kwargs.pop("data", {})
@@ -247,7 +247,7 @@ async def delete_last_n_rows_from_csv_report(csv_path: None | str, rows: int = 1
     async with aopen(csv_path, encoding="ascii", newline="") as csv_file:
         content = await csv_file.read()
     reader = csv.reader(content.splitlines())
-    data = [row for row in reader]
+    data = list(reader)
 
     await add_rows_to_csv_report(csv_path, data[:-rows], mode="w")
 

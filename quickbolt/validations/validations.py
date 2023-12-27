@@ -47,6 +47,7 @@ class Validations(object):
     async def validate_references(
         self,
         actual_refs: str,
+        skipped_keys: None | list = None,
         expected_refs: None | str = None,
         safe: bool = True,
     ) -> list[dict]:
@@ -56,6 +57,7 @@ class Validations(object):
 
         Args:
             actual_refs: The actual (current) path of refs to validate.
+            skipped_keys: The keys to skip in the comparison.
             expected_refs: The expected (stored) path of refs to use as a reference.
             safe: Whether to raise an error on mismatches.
 
@@ -75,8 +77,8 @@ class Validations(object):
 
         if len(_actual_refs) != len(_expected_refs):
             message = (
-                f"Test completed HOWEVER, verification isn't possible as the "
-                f"actual and expected reference files aren't the same size."
+                "Test completed HOWEVER, verification isn't possible as the "
+                "actual and expected reference files aren't the same size. Check validation csv existence."
             )
             await self.fail(message)
 
@@ -90,7 +92,10 @@ class Validations(object):
             unscrubbed_refs, _actual_refs, _expected_refs
         ):
             errors = dh.compare_dictionaries(
-                a_refs, e_refs, exclusive_keys=["ACTUAL_CODE", "MESSAGE"]
+                a_refs,
+                e_refs,
+                skipped_keys=skipped_keys,
+                exclusive_keys=["ACTUAL_CODE", "MESSAGE"],
             )
 
             e_values = errors.get("values")

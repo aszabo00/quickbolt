@@ -27,7 +27,7 @@ Please fill the following information in each issue you submit:
 4. Run `. scripts/code_quality/linter.sh`
 5. Ensure the test cases & static analysis run successfully (`. tests/run_tests.sh`)
 6. Submit a pull request to `master` branch
-7. Include the test results in the pull request
+7. Include the test result file `pytest_run_output.txt` in the pull request
 
 ### The Pull Request scheme:
 
