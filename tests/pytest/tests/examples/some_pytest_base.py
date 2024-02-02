@@ -5,6 +5,7 @@ import pytest
 import quickbolt.utils.directory as dh
 from quickbolt.clients import AioGPRC, AioRequests
 from quickbolt.pytest import CorePytestBase
+from tests.client.gprc.test_async_call import check_server
 
 
 class SomePytestBase(CorePytestBase):
@@ -20,6 +21,8 @@ class SomePytestBase(CorePytestBase):
 
         for k, v in self.__dict__.items():
             setattr(SomePytestBase, k, v)
+
+        process = check_server()
 
         yield
 
@@ -44,3 +47,5 @@ class SomePytestBase(CorePytestBase):
         logs = [r async for r in self.aio_requests.logging.read_log_file()]
         checks = ["making", "made", "returning", "batch duration"]
         assert all(c in logs[i].lower() for i, c in enumerate(checks))
+
+        process.kill()
