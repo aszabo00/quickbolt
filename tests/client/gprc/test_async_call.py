@@ -37,8 +37,7 @@ def is_server_online(host, port, timeout=1):
         return False
 
 
-@pytest.fixture(scope="module", autouse=True)
-def setup_teardown():
+def check_server():
     process = Popen(
         'export PYTHONPATH="/workspaces/quickbolt":$PYTHONPATH && \
             python async_greeter_server.py',
@@ -53,6 +52,13 @@ def setup_teardown():
         if is_server_online(host, port):
             break
         sleep(0.25)
+
+    return process
+
+
+@pytest.fixture(scope="module", autouse=True)
+def setup_teardown():
+    process = check_server()
 
     yield
 
