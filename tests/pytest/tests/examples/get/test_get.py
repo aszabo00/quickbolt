@@ -30,6 +30,7 @@ class TestGetExample(SomePytestBase):
 
     async def test_get_example_call(self):
         options = {
+            "secure": False,
             "address": "localhost:50051",
             "stub": helloworld_pb2_grpc.GreeterStub,
             "method": "SayHello",

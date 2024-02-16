@@ -22,12 +22,12 @@ DESCRIPTION,CODE_MISMATCH,BATCH_NUMBER,INDEX,METHOD,EXPECTED_CODE,ACTUAL_CODE,ME
     ""bs"": ""harness real-time e-markets""
   }
 }",https://jsonplaceholder.typicode.com/users/0,"{
-  ""Date"": ""Tue, 00 Dec 0000 00:00:00 GMT"",
+  ""Date"": ""Fri, 00 Feb 0000 00:00:00 GMT"",
   ""Content-Type"": ""application/json; charset=utf-0"",
   ""Transfer-Encoding"": ""chunked"",
   ""Connection"": ""keep-alive"",
-  ""Report-To"": ""{\""group\"":\""heroku-nel\"",\""max_age\"":0000,\""endpoints\"":[{\""url\"":\""https://nel.heroku.com/reports?ts=0000000000&sid=00000000-0000-0000-0000-000000000000&s=0000000000000%000000000000000000%000000000%000000%00\""}]}"",
-  ""Reporting-Endpoints"": ""heroku-nel=https://nel.heroku.com/reports?ts=0000000000&sid=00000000-0000-0000-0000-000000000000&s=0000000000000%000000000000000000%000000000%000000%00"",
+  ""Report-To"": ""{\""group\"":\""heroku-nel\"",\""max_age\"":0000,\""endpoints\"":[{\""url\"":\""https://nel.heroku.com/reports?ts=0000000000&sid=00000000-0000-0000-0000-000000000000&s=000000000000%00000000000000000000000000000000%00\""}]}"",
+  ""Reporting-Endpoints"": ""heroku-nel=https://nel.heroku.com/reports?ts=0000000000&sid=00000000-0000-0000-0000-000000000000&s=000000000000%00000000000000000000000000000000%00"",
   ""Nel"": ""{\""report_to\"":\""heroku-nel\"",\""max_age\"":0000,\""success_fraction\"":0.000,\""failure_fraction\"":0.00,\""response_headers\"":[\""Via\""]}"",
   ""X-Powered-By"": ""Express"",
   ""X-Ratelimit-Limit"": ""0000"",
@@ -47,8 +47,8 @@ DESCRIPTION,CODE_MISMATCH,BATCH_NUMBER,INDEX,METHOD,EXPECTED_CODE,ACTUAL_CODE,ME
   ""CF-RAY"": ""0000000000000000-CDG"",
   ""Content-Encoding"": ""br"",
   ""alt-svc"": ""00=\"":000\""; ma=00000""
-}",2023-12-26T10:20:47.427862+00:00,{},{},,0.14,0.0
+}",2024-02-16T14:53:39.243490+00:00,{},{},,0.12,0.0
 
 ,,1,1,SayHello,,OK,"{
-  ""greeting"": ""Hello, Quickbolt!""
-}",localhost:50051,{},2023-12-26T10:20:47.445904+00:00,{},{},{},0.01,0.0
+  ""message"": ""{\n  \""greeting\"": \""Hello, Quickbolt!\""\n}""
+}",localhost:50051,{},2024-02-16T14:53:39.259567+00:00,{},{},{},0.01,0.0
