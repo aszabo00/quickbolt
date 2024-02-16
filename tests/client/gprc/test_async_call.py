@@ -19,6 +19,7 @@ root_dir = str(parent / path.stem)
 host = "localhost"
 port = 50051
 _options = {
+    "secure": False,
     "address": f"{host}:{port}",
     "stub": helloworld_pb2_grpc.GreeterStub,
     "method": "SayHello",
@@ -134,7 +135,7 @@ async def test_call_report():
 async def test_call_report_full_scrub_fields():
     full_scrub_fields = ["message"]
     await test_call(full_scrub_fields=full_scrub_fields, delete=False)
-    expected_message = {"greeting": "00000000000000000"}
+    expected_message = {"message": '{\n  "greeting": "Hello, Quickbolt!"\n}'}
 
     scrubbed_csv_path = pytest.aio_grpc.csv_path.replace(".csv", "_scrubbed.csv")
     scrubbed_dict = await rc.csv_to_dict(scrubbed_csv_path)

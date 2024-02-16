@@ -5,12 +5,13 @@ from operator import itemgetter
 from time import perf_counter
 
 import pypeln as pl
-from grpc.aio import AioRpcError, Channel, insecure_channel
+from google.protobuf.json_format import MessageToDict
+from grpc import ssl_channel_credentials
+from grpc.aio import AioRpcError, Channel, insecure_channel, secure_channel
 
 import quickbolt.reporting.response_csv as rc
 import quickbolt.utils.sync_async as sa
 from quickbolt.logging import AsyncLogger
-from quickbolt.utils.json import deserialize
 
 
 class AioGPRC(object):
@@ -36,13 +37,16 @@ class AioGPRC(object):
         self.batch_number = 0
         self._return_history: list = []
 
-    async def create_channel(self, address: str, options: dict) -> Channel:
+    async def create_channel(
+        self, address: str, options: dict, secure: bool = True
+    ) -> Channel:
         """
         This creates an insecure channel to the server.
 
         Args:
             address: The address of the server to connect to.
             options: The options of the call.
+            secure: Whether to use a secure or insecure channel.
 
         Returns:
             channel: The insecure channel to the server.
@@ -50,9 +54,17 @@ class AioGPRC(object):
         await self.logger.info(
             f"Creating the channel at {address} with options {options}."
         )
+
+        ssl_creds = ssl_channel_credentials()
         _options = list(options.items())
+
         if not self.channel:
-            self.channel = insecure_channel(address, _options)
+            self.channel = (
+                secure_channel(address, ssl_creds, _options)
+                if secure
+                else insecure_channel(address, _options)
+            )
+
         await self.logger.info(
             f"Created the channel at {address} with options {options}."
         )
@@ -84,6 +96,7 @@ class AioGPRC(object):
         delay = _options.get("delay", 0)
         index = _options.get("index", 0)
 
+        secure = options.get("secure", True)
         address = _options.get("address", "")
         stub = _options.get("stub", None)
         method = _options.get("method", None)
@@ -93,18 +106,19 @@ class AioGPRC(object):
         channel_options = _options.get("channel_options", {})
         actual_code = "OK"
 
-        await self.create_channel(address, channel_options)
+        await self.create_channel(address, channel_options, secure=secure)
         stub_active = stub(self.channel)
         stub_method = getattr(stub_active, method)
         call = stub_method(method_args, metadata=headers)
         server_headers = await call.initial_metadata()
+        server_headers = server_headers._metadata
 
         not delay or await sleep(delay)
         t0 = datetime.utcnow().replace(tzinfo=timezone.utc)
         try:
             response = await call
             t1 = datetime.utcnow().replace(tzinfo=timezone.utc)
-            message = deserialize(response.message, safe=True)
+            message = MessageToDict(response)
         except AioRpcError as e:
             t1 = datetime.utcnow().replace(tzinfo=timezone.utc)
             error_code = e.code()
