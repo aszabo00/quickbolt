@@ -19,7 +19,7 @@ def pytest_configure(config):
         asyncio.set_event_loop_policy(uvloop.EventLoopPolicy())
 
 
-@pytest.fixture(autouse=True, scope="session")
+@pytest.fixture(autouse=True, scope="module")
 def event_loop():
     try:
         loop = asyncio.get_running_loop()
