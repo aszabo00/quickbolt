@@ -1,4 +1,3 @@
-import asyncio
 import os as sos
 from pathlib import Path
 
@@ -10,8 +9,8 @@ import quickbolt.utils.directory as dh
 pytestmark = pytest.mark.utils
 
 
-@pytest.fixture(scope="module")
-def event_loop():
+@pytest.fixture(scope="module", autouse=True)
+def default_values():
     pytest.base_path = sos.path.dirname(__file__)
     pytest.test_dict = {
         "str1": "value1",
@@ -20,12 +19,7 @@ def event_loop():
         "list2": [0, 1],
     }
 
-    loop = asyncio.new_event_loop()
-    yield loop
-    loop.close()
 
-
-@pytest.mark.asyncio
 async def test_safe_mkdirs():
     path = pytest.base_path + "/test_dir"
     await dh.safe_mkdirs(path)
@@ -35,7 +29,6 @@ async def test_safe_mkdirs():
     assert not await aos.path.exists(path)
 
 
-@pytest.mark.asyncio
 async def test_safe_mkdirs_sync():
     path = pytest.base_path + "/test_dir"
     dh.safe_mkdirs_sync(path)
@@ -45,7 +38,6 @@ async def test_safe_mkdirs_sync():
     assert not await aos.path.exists(path)
 
 
-@pytest.mark.asyncio
 async def test_make_json():
     path = pytest.base_path + "/test.json"
     await dh.make_json(pytest.test_dict, path)
@@ -55,7 +47,6 @@ async def test_make_json():
     assert not await aos.path.exists(path)
 
 
-@pytest.mark.asyncio
 async def test_make_json_append():
     path = pytest.base_path + "/test_append.json"
     await dh.make_json(pytest.test_dict, path)
@@ -71,7 +62,6 @@ async def test_make_json_append():
     await aos.remove(path)
 
 
-@pytest.mark.asyncio
 async def test_make_json_ascii():
     path = pytest.base_path + "/test_ascii.json"
     await dh.make_json(pytest.test_dict, path, ensure_ascii=True)
@@ -81,7 +71,6 @@ async def test_make_json_ascii():
     assert not await aos.path.exists(path)
 
 
-@pytest.mark.asyncio
 async def test_load_json():
     path = pytest.base_path + "/test_load.json"
     await dh.make_json(pytest.test_dict, path)
@@ -134,7 +123,6 @@ def test_get_src_app_dir():
     assert app_dir == expected_dir
 
 
-@pytest.mark.asyncio
 async def test_expand_directory():
     expanded_dir = await dh.expand_directory(pytest.base_path)
     expanded_dir = [Path(e) for e in expanded_dir if "__pycache__" not in e]

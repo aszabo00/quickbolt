@@ -12,8 +12,8 @@ import quickbolt.utils.json as jh
 pytestmark = pytest.mark.reporting
 
 
-@pytest.fixture(scope="module")
-def event_loop():
+@pytest.fixture(scope="module", autouse=True)
+def default_vaults():
     pytest.csv_dir = f"{sos.path.dirname(__file__)}/validations"
     pytest.csv_path = f"{pytest.csv_dir}/response_csv.csv"
 
@@ -61,12 +61,7 @@ def event_loop():
         ],
     }
 
-    loop = asyncio.new_event_loop()
-    yield loop
-    loop.close()
 
-
-@pytest.mark.asyncio
 async def test_read_csv():
     response_csv = await rc.read_csv(pytest.csv_path)
     assert response_csv
@@ -133,14 +128,12 @@ def test_scrub_full_fields():
     assert scrubbed_data == expected_scrubbed_data
 
 
-@pytest.mark.asyncio
 async def test_csv_to_dict_path():
     response_dict = await rc.csv_to_dict(pytest.csv_path)
     assert response_dict
     assert isinstance(response_dict[0], dict)
 
 
-@pytest.mark.asyncio
 async def test_csv_to_dict_data():
     response_csv = await rc.read_csv(pytest.csv_path)
     response_dict = await rc.csv_to_dict(response_csv)
@@ -148,7 +141,6 @@ async def test_csv_to_dict_data():
     assert isinstance(response_dict[0], dict)
 
 
-@pytest.mark.asyncio
 async def test_csv_to_dict_path_scrub_data():
     response_csv = await rc.read_csv(pytest.csv_path)
     response_csv[1][11] = pytest.test_field
@@ -159,7 +151,6 @@ async def test_csv_to_dict_path_scrub_data():
     assert response_dict[0]["HEADERS"] == {"field": "000000000"}
 
 
-@pytest.mark.asyncio
 async def test_csv_to_dict_path_scrub_data_full_fields():
     full_scrub_fields = ["headers", "message"]
     response_csv = await rc.read_csv(pytest.csv_path)
@@ -185,7 +176,6 @@ async def test_csv_to_dict_path_scrub_data_full_fields():
     }
 
 
-@pytest.mark.asyncio
 async def test_create_csv_report(scrub=False, delete=True):
     async def check_creation(path, delete):
         assert await aos.path.exists(path)
@@ -212,12 +202,10 @@ async def test_create_csv_report(scrub=False, delete=True):
     return [csv_copy, csv_scrubbed_copy]
 
 
-@pytest.mark.asyncio
 async def test_create_csv_report_scrub():
     await test_create_csv_report(scrub=True)
 
 
-@pytest.mark.asyncio
 async def test_add_rows_to_csv_report(delete=True):
     csv_copy, _ = await test_create_csv_report(delete=False)
     response_csv = await rc.read_csv(csv_copy)
@@ -231,7 +219,6 @@ async def test_add_rows_to_csv_report(delete=True):
     return csv_copy
 
 
-@pytest.mark.asyncio
 async def test_delete_last_n_rows_from_csv_report():
     csv_copy, _ = await test_create_csv_report(delete=False)
     await rc.delete_last_n_rows_from_csv_report(csv_copy, 2)
@@ -241,7 +228,6 @@ async def test_delete_last_n_rows_from_csv_report():
     await aos.remove(csv_copy)
 
 
-@pytest.mark.asyncio
 async def test_add_column_to_csv_report():
     csv_copy, _ = await test_create_csv_report(delete=False)
     await rc.add_column_to_csv_report(

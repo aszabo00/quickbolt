@@ -114,13 +114,13 @@ class AioGPRC(object):
         server_headers = server_headers._metadata
 
         not delay or await sleep(delay)
-        t0 = datetime.utcnow().replace(tzinfo=timezone.utc)
+        t0 = datetime.now(timezone.utc)
         try:
             response = await call
-            t1 = datetime.utcnow().replace(tzinfo=timezone.utc)
+            t1 = datetime.now(timezone.utc)
             message = MessageToDict(response)
         except AioRpcError as e:
-            t1 = datetime.utcnow().replace(tzinfo=timezone.utc)
+            t1 = datetime.now(timezone.utc)
             error_code = e.code()
             actual_code = error_code.name
             message = e.details()
