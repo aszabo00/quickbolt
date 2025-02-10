@@ -157,10 +157,10 @@ class HttpxRequests(object):
         await self.logger.info(f"Making the request with {data}.")
         not delay or await asyncio.sleep(delay)
 
-        t0 = datetime.utcnow().replace(tzinfo=timezone.utc)
+        t0 = datetime.now(timezone.utc)
         response = await client.request(method, url, **kwargs)
 
-        t1 = datetime.utcnow().replace(tzinfo=timezone.utc)
+        t1 = datetime.now(timezone.utc)
         response_seconds = round((t1 - t0).total_seconds(), 2)
 
         if stream_path:
@@ -296,7 +296,7 @@ class HttpxRequests(object):
             "responses": sorted(responses, key=itemgetter("index")),
         }
         self._return_history.append(_return)
-        await self.logger.info(f'The batch duration was {_return["duration"]} seconds.')
+        await self.logger.info(f"The batch duration was {_return['duration']} seconds.")
 
         if _return["responses"]:
             not report or await rc.create_csv_report(

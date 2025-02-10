@@ -1,4 +1,3 @@
-import asyncio
 import os
 
 import pytest
@@ -9,17 +8,12 @@ from quickbolt.validations import Validations
 pytestmark = pytest.mark.validations
 
 
-@pytest.fixture(scope="module")
-def event_loop():
+@pytest.fixture(scope="module", autouse=True)
+def default_values():
     pytest.root_dir = os.path.dirname(__file__)
     pytest.validations = Validations(root_dir=pytest.root_dir)
 
-    loop = asyncio.new_event_loop()
-    yield loop
-    loop.close()
 
-
-@pytest.mark.asyncio
 async def test_validate_references():
     validations = Validations(root_dir=pytest.root_dir)
     actual_path = f"{pytest.root_dir}/get_example_scrubbed.csv"
@@ -28,7 +22,6 @@ async def test_validate_references():
     await validations.logging.delete_run_info()
 
 
-@pytest.mark.asyncio
 async def test_validate_references_skipped_keys():
     validations = Validations(root_dir=pytest.root_dir)
     actual_path = f"{pytest.root_dir}/get_example_scrubbed_mismatch.csv"
@@ -40,7 +33,6 @@ async def test_validate_references_skipped_keys():
     await validations.logging.delete_run_info()
 
 
-@pytest.mark.asyncio
 async def test_validate_references_mismatch(safe=True):
     validations = Validations(root_dir=pytest.root_dir)
     actual_path = f"{pytest.root_dir}/get_example_scrubbed_mismatch.csv"
@@ -64,7 +56,6 @@ async def test_validate_references_mismatch(safe=True):
     await validations.logging.delete_run_info()
 
 
-@pytest.mark.asyncio
 async def test_validate_references_mismatch_not_safe():
     try:
         await test_validate_references_mismatch(safe=False)
@@ -75,7 +66,6 @@ async def test_validate_references_mismatch_not_safe():
     await Validations(root_dir=pytest.root_dir).logging.delete_run_info()
 
 
-@pytest.mark.asyncio
 async def test_fail_no_debug():
     validations = Validations(root_dir=pytest.root_dir)
     log_file_path = validations.logging.log_file_path
@@ -94,7 +84,6 @@ async def test_fail_no_debug():
     await validations.logging.delete_run_info()
 
 
-@pytest.mark.asyncio
 async def test_fail_debug():
     validations = Validations(root_dir=pytest.root_dir, debug=True)
     log_file_path = validations.logging.log_file_path

@@ -1,4 +1,3 @@
-import asyncio
 import os as sos
 from datetime import datetime
 
@@ -9,13 +8,6 @@ import quickbolt.utils.directory as dh
 from quickbolt.logging import AsyncLogger
 
 pytestmark = pytest.mark.logging
-
-
-@pytest.fixture(scope="module")
-def event_loop():
-    loop = asyncio.new_event_loop()
-    yield loop
-    loop.close()
 
 
 async def create_logging(by_time=False):
@@ -53,16 +45,13 @@ async def create_logging(by_time=False):
     assert not await aos.path.exists(path)
 
 
-@pytest.mark.asyncio
 async def test_logging_custom_root():
     await create_logging()
 
 
-@pytest.mark.asyncio
 async def test_logging_by_time():
     await create_logging(by_time=True)
 
 
-@pytest.mark.asyncio
 async def test_logging_custom_root_by_time_():
     await create_logging(by_time=True)

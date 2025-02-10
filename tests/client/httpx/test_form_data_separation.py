@@ -1,4 +1,3 @@
-import asyncio
 import os as sos
 
 import aiofiles.os as aos
@@ -10,8 +9,8 @@ from quickbolt.clients import HttpxRequests
 pytestmark = pytest.mark.client
 
 
-@pytest.fixture(scope="module")
-def event_loop():
+@pytest.fixture(scope="module", autouse=True)
+def default_values():
     pytest.root_dir = f"{sos.path.dirname(__file__)}/{__name__.split('.')[-1]}"
     pytest.expected_form_data = """{'data': {'field1': 'value1'}, 'files': [('file', <_io.BufferedReader name='root_dir/tests/client/httpx/test_form_data_separation.py'>)]}"""
     pytest.expected_form_data = pytest.expected_form_data.replace(
@@ -20,12 +19,7 @@ def event_loop():
 
     pytest.httpx_requests = HttpxRequests(root_dir=pytest.root_dir)
 
-    loop = asyncio.new_event_loop()
-    yield loop
-    loop.close()
 
-
-@pytest.mark.asyncio
 async def test_dict_as_form_data():
     form_data = await pytest.httpx_requests.separate_form_data(
         field1="value1", file=__file__
@@ -33,7 +27,6 @@ async def test_dict_as_form_data():
     assert str(form_data) == pytest.expected_form_data
 
 
-@pytest.mark.asyncio
 async def test_dict_as_form_data_kwargs():
     body = {"field1": "value1", "file": __file__}
     form_data = await pytest.httpx_requests.separate_form_data(**body)

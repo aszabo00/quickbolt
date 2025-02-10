@@ -14,13 +14,19 @@ class Validations(object):
     This is the class that hold all the ways we gather and use information for validations.
     """
 
-    def __init__(self, debug: bool = False, root_dir: None | str = None):
+    def __init__(
+        self,
+        debug: bool = False,
+        root_dir: None | str = None,
+        validations_dir: None | str = None,
+    ):
         """
         The constructor for Validations.
 
         Args:
             debug: Whether to catch exceptions in the fail method.
             root_dir: The specified root directory.
+            validations_dir: The specified validations directory where the csv files are.
         """
         self.debug = debug
         self.logging = AsyncLogger(root_dir=root_dir)
@@ -35,9 +41,11 @@ class Validations(object):
         path_diff = app_dir.relative_to(root_dir)
         path_diff = Path(str(path_diff).replace("tests/", ""))
 
-        validations_dir = str(root_dir / "validations" / path_diff)
+        self.validations_dir = validations_dir or str(
+            root_dir / "validations" / path_diff
+        )
         refs_dir = next(
-            (ref for ref in root_dir.rglob("*") if validations_dir in str(ref)),
+            (ref for ref in root_dir.rglob("*") if self.validations_dir in str(ref)),
             None,
         )
         self.refs_paths = (

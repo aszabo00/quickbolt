@@ -1,4 +1,3 @@
-import asyncio
 from pathlib import Path
 
 import pytest
@@ -18,20 +17,13 @@ class TestGetExample:
     headers = {}
     url = "https://jsonplaceholder.typicode.com/users/1"
 
-    @pytest.fixture(scope="class")
-    def event_loop(self):
+    @pytest.fixture(scope="class", autouse=True)
+    def default_values(self):
         pytest.aio_requests = AioRequests(root_dir=self.root_dir)
         pytest.core_pytest_base = CorePytestBase()
         pytest.core_pytest_base.csv_path = pytest.aio_requests.csv_path
         pytest.core_pytest_base.root_dir = self.root_dir
 
-        loop = asyncio.new_event_loop()
-
-        yield loop
-
-        loop.close()
-
-    @pytest.mark.asyncio
     async def test_get_example_request(self):
         batch = {"method": "get", "headers": self.headers, "url": self.url}
         await pytest.aio_requests.async_request(batch)

@@ -1,4 +1,3 @@
-import asyncio
 import os as sos
 import time
 
@@ -11,24 +10,19 @@ from quickbolt.clients import AioRequests
 pytestmark = pytest.mark.client
 
 
-@pytest.fixture(scope="module")
-def event_loop():
+@pytest.fixture(scope="module", autouse=True)
+def default_values():
     pytest.root_dir = f"{sos.path.dirname(__file__)}/{__name__.split('.')[-1]}"
     pytest.headers = {}
     pytest.url = "https://jsonplaceholder.typicode.com/users/1"
 
-    pytest.aio_requests = AioRequests(root_dir=pytest.root_dir, reuse=True)
-    pytest.run_info_path = pytest.aio_requests.logging.run_info_path
 
-    loop = asyncio.new_event_loop()
-    yield loop
-    loop.close()
-
-
-@pytest.mark.asyncio
 async def test_request(
     batch=None, delay=0, report=True, full_scrub_fields=None, **kwargs
 ):
+    pytest.aio_requests = AioRequests(root_dir=pytest.root_dir, reuse=True)
+    pytest.run_info_path = pytest.aio_requests.logging.run_info_path
+
     batch = batch or {"method": "get", "headers": pytest.headers, "url": pytest.url}
     response = await pytest.aio_requests.async_request(
         batch, delay=delay, report=report, full_scrub_fields=full_scrub_fields, **kwargs
@@ -67,7 +61,6 @@ async def test_request(
         assert responses[0].get("message")
 
 
-@pytest.mark.asyncio
 async def test_request_multiple():
     batch = [
         {"method": "get", "headers": pytest.headers, "url": pytest.url},
@@ -76,7 +69,6 @@ async def test_request_multiple():
     await test_request(batch)
 
 
-@pytest.mark.asyncio
 async def test_request_delay():
     start = time.perf_counter()
     await test_request(delay=2)
@@ -84,13 +76,11 @@ async def test_request_delay():
     assert stop >= 2
 
 
-@pytest.mark.asyncio
 async def test_request_content_stream():
     stream_path = f"{pytest.run_info_path}/streamed_content.txt"
     await test_request(stream_path=stream_path)
 
 
-@pytest.mark.asyncio
 async def test_request_report_full_scrub_fields():
     full_scrub_fields = ["message"]
     await test_request(full_scrub_fields=full_scrub_fields)
@@ -120,7 +110,6 @@ async def test_request_report_full_scrub_fields():
     assert scrubbed_dict[-1]["MESSAGE"] == expected_message
 
 
-@pytest.mark.asyncio
 async def test_no_request_report():
     await pytest.aio_requests.logging.delete_run_info(pytest.root_dir)
     path = pytest.aio_requests.logging.log_file_path
@@ -130,7 +119,6 @@ async def test_no_request_report():
     assert not await aos.path.exists(pytest.aio_requests.csv_path)
 
 
-@pytest.mark.asyncio
 async def test_close_connection():
     await pytest.aio_requests.close()
     assert pytest.aio_requests.session is None

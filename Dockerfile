@@ -1,12 +1,11 @@
 # Stage 1: Build dependencies
-FROM python:3.11
+FROM python:3.13
 
 # Set the working directory
 WORKDIR /quickbolt
 
 # Copy only the dependency files to the container
-COPY pyproject.toml ./
-# COPY pyproject.toml poetry.lock ./
+COPY pyproject.toml poetry.lock ./
 
 # Install Poetry
 RUN curl -sSL https://install.python-poetry.org | python3 -
